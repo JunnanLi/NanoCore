@@ -16,7 +16,6 @@ int main(int argc, char *argv[])
 		printf("\t2:\tread sel\n");
 		printf("\t3:\tconfigure instruction\n");
 		printf("\t4:\tread instruction\n");
-		printf("\t5:\tsend a tcp pkt\n");
 		printf("//======================================================//\n");
 		printf("opt is: ");
 		scanf("%d", &opt);
