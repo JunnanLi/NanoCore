@@ -1,10 +1,9 @@
-/*
+# Hardware
 * This is a hardware readme.
 * Copyright (C) 2019  Junnan Li <lijunnan@nudt.edu.cn>
 * Permission to use, copy, modify, and/or distribute this code for any
 * purpose with or without fee is hereby granted, provided that the above
 * copyright notice and this permission notice appear in all copies.
-*/
 
 There are 8 files in this folder: 
 1) TuMan_core.v:  A small but pipelined RISC-V (RV32I) processor (core 
