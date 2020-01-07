@@ -50,6 +50,6 @@ We can recieve values returned from CPU by run t_recv:
 >>  
 >>===============  
 >>Hello, AoTuman!  
->>&===============  
+>>\===============  
 >>  
 >>DONE  
