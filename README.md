@@ -24,7 +24,11 @@ There are 2 floders in "Software" folder:
 | controller  | communicate with cpu |
 
 ## Simulation
-Run this program, and you will get following result:
-"Hello, AoTuman!"
+### Steps
+1) Generate firmware.hex: following the commonds of README.md in firmware folder
+2) Using vivado/Modesim to simulate these project by loading hardware files and firmware.hex
+
+### Result
+Run this program, and you will get following result: "Hello, AoTuman!"
 
 
