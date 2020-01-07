@@ -37,7 +37,9 @@ We currently only provide support for the [OpenBox-S4](https://github.com/fast-c
 We use commonds in firmware folder to Generate firmware.hex
 
 ### Generating bitstream
-We use Vivado 2018.2. to generate bitstream, i.e., OpenBox_S4.bit
+First, we need a typical (FAST project)(https://github.com/fast-codesign/FAST-OpenBox_S4-impl), and replace the `um.v` with our `um.v`.
+Then, we add our ohter hardware verilog files, i.e., `TuMan_core.v`, `TuMan_top.v`, `conf_mem.v` and `memory.v`.
+Third, we use Vivado 2018.2. to generate bitstream, i.e., OpenBox_S4.bit.
 
 ### Communicate with CPU
 We use commonds in controller folder to communicate with CPU
