@@ -31,4 +31,10 @@ There are 2 floders in "Software" folder:
 ### Result
 Run this program, and you will get following result: "Hello, AoTuman!"
 
+## FPGA Emulation
+We currently only provide support for the [OpenBox-S4](https://github.com/fast-codesign/FAST-OpenBox_S4-impl). We provide pre-build binary program and bitstream files for OpenBox-S4 [here](https://github.com/JunnanLi/TuMan/tree/master/mcs%26hex).
+### FPGA 
+### Steps
+1) Generating firmware.hex by using commonds in firmware folder
+2) Using vivado/Modesim to simulate these project by loading hardware files and firmware.hex
 
