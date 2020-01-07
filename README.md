@@ -3,9 +3,9 @@ A Pipelined RISC-V Core
 
 # Hardware part
 There are 8 files in "Hardware" folder: 
-1) TuMan_core.v:  A small but pipelined RISC-V (RV32I) processor (core 
+1) TuMan_core.v:\t  A small but pipelined RISC-V (RV32I) processor (core 
                   processing logic)
-2) TuMan_top.v:   Connect the TuMan_core and instrcution/data ram (ITCM/DTCM)
+2) TuMan_top.v:\t   Connect the TuMan_core and instrcution/data ram (ITCM/DTCM)
 3) memory.v:      Instrcution ram (ITCM) and data ram (DTCM)
 4) conf_mem.v:    Used to configure/initializing ITCM/DTCM (by Ethernet 
                   packet whose type is 0x9001-0x9004); Another function
