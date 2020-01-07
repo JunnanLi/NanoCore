@@ -12,7 +12,7 @@ There are 5 files in this folder:
 
 ## Usage
 1) Run Makefile (i.e., `make` ) to generate two binary program, i.e., t_send & t_recv
-2) Run t_send (i.e., `./t_send`) to configure CPU, you will see a simplied UI：
+2) Run t_send (i.e., `./t_send`) to configure CPU, you will see a simplied UI, And you can chose any option by inputing the corresponding digit：
   >>//======================================================//  
 >>  Please chose your option:  
 >>	0:	set sel to 0, i.e., running mode  
@@ -21,6 +21,6 @@ There are 5 files in this folder:
 >>	3:	configure instruction  
 >>	4:	read instruction  
 >>//======================================================//  
-And you can chose any option by inputing the corresponding digit.
+
 For example, 
 3) Run t_recv (i.e., `./t_recv`) to print values returned from CPU
