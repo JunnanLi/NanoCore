@@ -11,23 +11,15 @@ There are 5 files in this folder:
 |receive_test.c| Has a main function used to print information returned from CPU          |
 
 ## Usage
-1) Run Makefile (i.e., make ) to generate two binary program, i.e., t_send & t_recv
-2) Run t_send (i.e., ./t_send) to configure CPU, you will see a simplied UI：
->>//======================================================//
-
->>  Please chose your option:
-
->>	0:	set sel to 0, i.e., running mode
-
->>	1:	set sel to 1, i.e., configuring mode
-
->>	2:	read sel
-
->>	3:	configure instruction
-
->>	4:	read instruction
-
->>	5:	send a tcp pkt
-
->>//======================================================//
-3) Run t_recv (i.e., ./t_recv) to print values returned from CPU
+1) Run Makefile (i.e., `make` ) to generate two binary program, i.e., t_send & t_recv
+2) Run t_send (i.e., `./t_send`) to configure CPU, you will see a simplied UI：
+  >>//======================================================//
+  >>  Please chose your option:
+  >>	0:	set sel to 0, i.e., running mode
+  >>	1:	set sel to 1, i.e., configuring mode
+  >>	2:	read sel
+  >>	3:	configure instruction
+  >>	4:	read instruction
+  >>	5:	send a tcp pkt
+  >>//======================================================//
+3) Run t_recv (i.e., `./t_recv`) to print values returned from CPU
