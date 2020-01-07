@@ -25,7 +25,7 @@ There are 2 floders in "Software" folder:
 
 ## Simulation
 ### Steps
-1) Generate firmware.hex: following the commonds of README.md in firmware folder
+1) Generating firmware.hex by using commonds in firmware folder
 2) Using vivado/Modesim to simulate these project by loading hardware files and firmware.hex
 
 ### Result
