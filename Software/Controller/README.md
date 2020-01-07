@@ -20,6 +20,7 @@ There are 5 files in this folder:
 >>	2:	read sel  
 >>	3:	configure instruction  
 >>	4:	read instruction  
->>	5:	send a tcp pkt  
->>//======================================================//
+>>//======================================================//  
+And you can chose any option by inputing the corresponding digit.
+For example, 
 3) Run t_recv (i.e., `./t_recv`) to print values returned from CPU
