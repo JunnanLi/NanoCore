@@ -42,3 +42,14 @@ We use Vivado 2018.2. to generate bitstream, i.e., OpenBox_S4.bit
 ### Communicate with CPU
 We use commonds in controller folder to communicate with CPU
 
+### Result
+We can recieve values returned from CPU by run t_recv:  
+>>interface: enp0s31f6  
+>>dtcm_sel is 0  
+>>dtcm_sel is 1  
+>>  
+>>===============  
+>>Hello, AoTuman!  
+>>===============  
+>>  
+>>DONE  
