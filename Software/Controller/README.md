@@ -23,7 +23,7 @@ There are 5 files in this folder:
 >>//======================================================//  
 >>  opt is:  
 
-    For example,  we run the example program by input `3` to configure intstuction, and then `0` to run the program  
+    For example,  we run the example program by inputing `3` to configure intstuction, and then `0` to run the program  
 3) Run t_recv (i.e., `./t_recv`) to print values returned from CPU， you will see two kinds of returned value:  
-*dtcm_sel is `x`  
-*`printf value`
+a) dtcm_sel is `x`  
+b) `printf value`
