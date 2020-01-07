@@ -9,5 +9,5 @@ We provide basic files to generate an example binary program by following common
 7) chmod -x firmware/firmware.bin
 8) python3 firmware/makehex.py firmware/firmware.bin 16384 > firmware/firmware.hex
 
-##Note
+## Note
 You should export the path_to_riscv first, e.g., export path_to_riscv=/opt/riscv32i in our environment
