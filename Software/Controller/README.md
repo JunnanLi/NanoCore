@@ -13,8 +13,8 @@ There are 5 files in this folder:
 ## Usage
 1) Run Makefile (i.e., `make` ) to generate two binary program, i.e., t_send & t_recv
 2) Run t_send (i.e., `./t_send`) to configure CPU, you will see a simplied UI：
-  >>//======================================================//
-  >>  Please chose your option:
+  >>//======================================================//  
+>>  Please chose your option:
   >>	0:	set sel to 0, i.e., running mode
   >>	1:	set sel to 1, i.e., configuring mode
   >>	2:	read sel
