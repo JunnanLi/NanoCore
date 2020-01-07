@@ -31,7 +31,6 @@ see readme in "controller" folder
 
 # Simulation
 Run this program, and you will get following result:
-===============
-Hello, AoTuman!
-===============
+"Hello, AoTuman!"
+
 
