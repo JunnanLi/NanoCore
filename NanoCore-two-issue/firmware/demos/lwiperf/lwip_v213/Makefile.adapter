@@ -1,0 +1,19 @@
+PORT = contrib/ports/riscv
+
+ADAPTER_INCLUDES = $(PORT)/include/arch/cc.h \
+		   $(PORT)/include/arch/cpu.h \
+		   $(PORT)/include/arch/perf.h \
+		   $(PORT)/include/arch/sys_arch.h \
+		   $(PORT)/include/arch/lwipopts.h \
+		   $(PORT)/include/arch/lwippools.h \
+		   $(PORT)/include/arch/sys_arch.h \
+		   $(PORT)/include/netif/riscvnetif.h
+		   
+ETHERNET_SRCS = $(PORT)/netif/riscvnetif.c
+
+SYSARCH_SOCKET_SRCS = $(PORT)/sys_arch.c
+
+ADAPTER_SRCS = $(ETHERNET_SRCS)
+
+ADAPTER_OBJS1 = $(ADAPTER_SRCS:%.c=%.o)
+ADAPTER_OBJS = $(notdir $(ADAPTER_OBJS1))

@@ -1,0 +1,137 @@
+diff '--color=auto' -r ./src/core_part/MultiCore_Top.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/core_part/MultiCore_Top.sv
+94c94
+<   wire  [`NUM_PE-1:0]       w_data_valid, w_data_valid_ns;
+---
+>   wire  [`NUM_PE-1:0]       w_data_valid;
+125d124
+<           .data_valid_ns_i    (w_data_valid_ns[i_pe]        ),
+177d175
+<           .data_valid_ns_i    (w_data_valid_ns[i_pe]        ),
+235d232
+<     .o_data_valid_ns        (w_data_valid_ns              ),
+diff '--color=auto' -r ./src/core_part/N2_idu_decode.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/core_part/N2_idu_decode.sv
+25,26c25,26
+<   output  reg   [1:0][2:0] alu_op_bypass_m0_d1_o,
+<   output  reg   [1:0][2:0] alu_op_bypass_m1_d1_o,
+---
+>   output  reg   [1:0][1:0] alu_op_bypass_m0_d1_o,
+>   output  reg   [1:0][1:0] alu_op_bypass_m1_d1_o,
+47d46
+<   input   wire          rf_we_lsu_ns_i,
+53d51
+<   input   wire  [regindex_bits-1:0] rf_dst_lsu_ns_i,
+92,103c90,97
+<     alu_op_bypass_m0_d1_o[0]  <= {3{~scb[uop_ctl_m0_d0.decoded_rs1].ready & 
+<                                      scb[uop_ctl_m0_d0.decoded_rs1].stage[0]}} & 
+<                                   scb[uop_ctl_m0_d0.decoded_rs1].alu;
+<     alu_op_bypass_m0_d1_o[1]  <= {3{~scb[uop_ctl_m0_d0.decoded_rs2].ready & 
+<                                      scb[uop_ctl_m0_d0.decoded_rs2].stage[0]}} & 
+<                                   scb[uop_ctl_m0_d0.decoded_rs2].alu;
+<     alu_op_bypass_m1_d1_o[0]  <= {3{~scb[uop_ctl_m1_d0.decoded_rs1].ready & 
+<                                      scb[uop_ctl_m1_d0.decoded_rs1].stage[0]}} & 
+<                                   scb[uop_ctl_m1_d0.decoded_rs1].alu;
+<     alu_op_bypass_m1_d1_o[1]  <= {3{~scb[uop_ctl_m1_d0.decoded_rs2].ready & 
+<                                      scb[uop_ctl_m1_d0.decoded_rs2].stage[0]}} & 
+<                                   scb[uop_ctl_m1_d0.decoded_rs2].alu;
+---
+>     alu_op_bypass_m0_d1_o[0]  <= {2{~scb[uop_ctl_m0_d0.decoded_rs1].ready & scb[uop_ctl_m0_d0.decoded_rs1].stage[0]}} & 
+>                                   {scb[uop_ctl_m0_d0.decoded_rs1].alu_ex,~scb[uop_ctl_m0_d0.decoded_rs1].alu_ex};
+>     alu_op_bypass_m0_d1_o[1]  <= {2{~scb[uop_ctl_m0_d0.decoded_rs2].ready & scb[uop_ctl_m0_d0.decoded_rs2].stage[0]}} & 
+>                                   {scb[uop_ctl_m0_d0.decoded_rs2].alu_ex,~scb[uop_ctl_m0_d0.decoded_rs2].alu_ex};
+>     alu_op_bypass_m1_d1_o[0]  <= {2{~scb[uop_ctl_m1_d0.decoded_rs1].ready & scb[uop_ctl_m1_d0.decoded_rs1].stage[0]}} & 
+>                                   {scb[uop_ctl_m1_d0.decoded_rs1].alu_ex,~scb[uop_ctl_m1_d0.decoded_rs1].alu_ex};
+>     alu_op_bypass_m1_d1_o[1]  <= {2{~scb[uop_ctl_m1_d0.decoded_rs2].ready & scb[uop_ctl_m1_d0.decoded_rs2].stage[0]}} & 
+>                                   {scb[uop_ctl_m1_d0.decoded_rs2].alu_ex,~scb[uop_ctl_m1_d0.decoded_rs2].alu_ex};
+354c348
+<         scb[i].alu      <= 'b0;
+---
+>         scb[i].alu_ex   <= 'b0;
+377,378c371
+<             i == rf_dst_mu_i && rf_we_mu_i ||
+<             i == rf_dst_lsu_ns_i && rf_we_lsu_ns_i)
+---
+>             i == rf_dst_mu_i && rf_we_mu_i)
+395c388
+<             scb[i].alu      <= 1;
+---
+>             scb[i].alu_ex   <= 0;
+407c400
+<               scb[i].alu      <= 1;
+---
+>               scb[i].alu_ex   <= 0;
+415c408
+<               scb[i].alu      <= 2;
+---
+>               scb[i].alu_ex   <= 1;
+diff '--color=auto' -r ./src/core_part/N2_idu.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/core_part/N2_idu.sv
+54,55c54,55
+<   output  wire  [1:0][2:0] alu_op_bypass_m0_d1_o,
+<   output  wire  [1:0][2:0] alu_op_bypass_m1_d1_o,
+---
+>   output  wire  [1:0][1:0] alu_op_bypass_m0_d1_o,
+>   output  wire  [1:0][1:0] alu_op_bypass_m1_d1_o,
+86d85
+<   input   wire          rf_we_lsu_ns_i,
+92d90
+<   input   wire  [regindex_bits-1:0] rf_dst_lsu_ns_i,
+426,427d423
+<     .rf_dst_lsu_ns_i  (rf_dst_lsu_ns_i  ),
+<     .rf_we_lsu_ns_i   (rf_we_lsu_ns_i   ),
+diff '--color=auto' -r ./src/core_part/N2_lsu.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/core_part/N2_lsu.sv
+19d18
+<   output  wire  [regindex_bits-1:0] rf_dst_lsu_ns_o,
+73d71
+<   assign rf_dst_lsu_ns_o  = lsu_ctl_fetch.rf_dst;
+diff '--color=auto' -r ./src/core_part/NanoCore_pkg.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/core_part/NanoCore_pkg.sv
+131c131
+<     logic [2:0] alu; //* {lsu,ex1,ex0}
+---
+>     logic alu_ex; //* 0/1
+diff '--color=auto' -r ./src/core_part/NanoCore.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/core_part/NanoCore.sv
+29d28
+<   input   wire          data_ready_ns_i,
+82,83c81
+<   wire  [regindex_bits-1:0] rf_dst_d2, rf_dst_ex0, rf_dst_ex1, 
+<                             rf_dst_lsu_ns, rf_dst_lsu, rf_dst_mu;
+---
+>   wire  [regindex_bits-1:0] rf_dst_d2, rf_dst_ex0, rf_dst_ex1, rf_dst_lsu, rf_dst_mu;
+100,101c98,99
+<   //* read rf at d1; {lsu,ex1,ex0}
+<   wire [1:0][2:0] alu_op_bypass_m0_d1, alu_op_bypass_m1_d1;
+---
+>   //* read rf at d1;
+>   wire [1:0][1:0] alu_op_bypass_m0_d1, alu_op_bypass_m1_d1;
+105d102
+<                      alu_op_bypass_m0_d1[0][2]? alu_rst_lsu :
+109d105
+<                      alu_op_bypass_m0_d1[1][2]? alu_rst_lsu :
+113d108
+<                      alu_op_bypass_m1_d1[0][2]? alu_rst_lsu :
+117d111
+<                      alu_op_bypass_m1_d1[1][2]? alu_rst_lsu :
+262d255
+<     .rf_dst_lsu_ns_i  (rf_dst_lsu_ns    ),
+264d256
+<     .rf_we_lsu_ns_i   (data_ready_ns_i  ),
+357d348
+<   .rf_dst_lsu_ns_o  (rf_dst_lsu_ns    ),
+diff '--color=auto' -r ./src/core_part/NanoCore_Wrapper.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/core_part/NanoCore_Wrapper.sv
+19d18
+<   input  wire           data_valid_ns_i,
+93d91
+<     .data_ready_ns_i  (data_valid_ns_i),
+diff '--color=auto' -r ./src/mem_part/Cache/NanoCache_Search.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/mem_part/Cache/NanoCache_Search.sv
+31d30
+<   output  wire                        o_cache_rvalid_ns,
+105d103
+<   assign o_cache_rvalid_ns = i_cache_rden & (|w_hit);
+diff '--color=auto' -r ./src/mem_part/Cache/NanoCache_Top_2Port.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/mem_part/Cache/NanoCache_Top_2Port.sv
+24d23
+<   output  wire                o_data_valid_ns,
+130d128
+<     .o_cache_rvalid_ns(o_data_valid_ns    ),
+diff '--color=auto' -r ./src/mem_part/Memory_Top_2Port.sv ../../3-github/sim_PRJ/pipelined-picorv32/src/mem_part/Memory_Top_2Port.sv
+27d26
+<   output  wire                    o_data_valid_ns,
+131d129
+<     .o_data_valid_ns  (o_data_valid_ns            ),

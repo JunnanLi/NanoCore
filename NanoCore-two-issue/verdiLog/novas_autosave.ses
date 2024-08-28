@@ -1,0 +1,88 @@
+@verdi rc file Version 1.0
+[General]
+saveDB = TRUE
+relativePath = FALSE
+saveSingleView = FALSE
+saveNWaveWinId = 
+VerdiVersion = Verdi_O-2018.09-SP2
+[KeyNote]
+Line1 = Automatic Backup 0
+Line2 = Save Open Database Information: Yes
+Line3 = Path Option: Absolute Paths
+Line4 = Windows Option: All Windows
+[TestBench]
+ConstrViewShow = 0
+InherViewShow = 0
+FSDBMsgShow = 0
+AnnotationShow = 0
+Console = FALSE
+powerDumped = 0
+[hb]
+postSimFile = /home/lijunnan/Documents/0-code/vcs_prj/pipelined-picorv32/wave.fsdb
+syncTime = 6737100000
+viewport = 140 54 3300 1312 0 0 534 3298
+activeNode = "Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore.u_exec0.genblk1"
+activeScope = "Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore.u_exec0.genblk1"
+activeFile = "./src/core_part/N2_exec.sv"
+interactiveMode = False
+viewType = Source
+simulatorMode = False
+sourceBeginLine = 72
+baMode = True
+srcLineNum = True
+AutoWrap = True
+IdentifyFalseLogic = False
+syncSignal = False
+traceMode = Hierarchical
+showTraceInSchema = True
+paMode = False
+funcMode = False
+powerAwareAnnot = True
+amsAnnot = True
+traceCrossHier = True
+DnDtraceCrossHierOnly = True
+traceIncTopPort = False
+leadingZero = False
+signalPane = False
+Scope1 = "Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore.u_exec0.genblk1"
+Scope2 = "Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore.u_exec0"
+Scope3 = "Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore"
+Scope4 = "Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore.u_ifu"
+Scope5 = "Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore.u_exec1"
+Scope6 = "Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore.u_idu"
+Scope7 = "Testbench_wrapper"
+multipleSelection = 1 81 1 0 0
+sdfCheckUndef = FALSE
+simFlow = FALSE
+[hb.design]
+importCmd = "-sverilog" "+v2k" "-f" "file_list.f" "-top" "Testbench_wrapper" 
+invokeDir = /home/lijunnan/Documents/0-code/vcs_prj/pipelined-picorv32
+[hb.sourceTab.1]
+scope = Testbench_wrapper.NanoCore_SoC.MultiCore_Top.gen_nanocore[0].genblk1.NanoCore_Wrapper.NanoCore.u_exec0.genblk1
+File = /home/lijunnan/Documents/0-code/vcs_prj/pipelined-picorv32/src/core_part/N2_exec.sv
+Line = 73
+[nMemoryManager]
+WaveformFile = /home/lijunnan/Documents/0-code/vcs_prj/pipelined-picorv32/wave.fsdb
+UserActionNum = 0
+nMemWindowNum = 0
+[wave.0]
+viewPort = 0 27 3300 578 268 464
+primaryWindow = TRUE
+SessionFile = /home/lijunnan/Documents/0-code/vcs_prj/pipelined-picorv32/verdiLog/novas_autosave.ses.wave.0
+displayGrid = FALSE
+hierarchicalName = FALSE
+snap = TRUE
+displayLeadingZeros = FALSE
+fixDelta = FALSE
+displayCursorMarker = FALSE
+autoUpdate = FALSE
+highlightGlitchs = FALSE
+waveformSyncCursorMarker = FALSE
+waveformSyncHorizontalRange = FALSE
+waveformSyncVerticalscroll = FALSE
+displayErrors = TRUE
+displayMsgSymbols = TRUE
+showMsgDescriptions = TRUE
+autoFit = FALSE
+displayDeltaY = FALSE
+centerCursor = FALSE

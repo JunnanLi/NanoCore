@@ -1,0 +1,49 @@
+# SHELL := /bin/bash
+
+## RISCV GCC ENVIRONMENT
+# RISCV            	?= $PULP_RISCV_GCC_TOOLCHAIN
+# TOOLCHAIN_PREFIX 	= $(RISCV)/bin/riscv32-unknown-elf-
+TOOLCHAIN_PREFIX 	= /home/lijunnan/Documents/2-software/riscv32i/bin/riscv32-unknown-elf-
+
+## MAKE ENV
+MAKE 		= make
+CCFLAGS 	= -march=rv32im
+GCC_WARNS  	= -Wall -Wextra -Wshadow -Wundef -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings
+GCC_WARNS 	+= -Wredundant-decls -Wstrict-prototypes -Wmissing-prototypes -pedantic -ffreestanding -nostdlib 
+
+## RAM_SIZE
+RAM_SIZE_KB = 256
+RAM_SIZE 	= $(shell expr $(RAM_SIZE_KB) \* 256)
+
+##############################################################################
+## system-related param, you can add SRC,OBJS,DIR for new flods;
+### DIR
+SYSTEM_DIR		= $(RUNTIME_PATH)/src/system
+IRQ_DIR			= $(RUNTIME_PATH)/src/irq
+ASM_DIR			= $(RUNTIME_PATH)/src/asm
+NETIF_DIR		= $(RUNTIME_PATH)/src/netif
+### SRC
+SYSTEM_SRC 		= ${wildcard $(RUNTIME_PATH)/src/system/*.c}
+IRQ_SRC 		= ${wildcard $(RUNTIME_PATH)/src/irq/*.c}
+ASM_SRC 		= ${wildcard $(RUNTIME_PATH)/src/asm/*.S}
+NETIF_SRC		= ${wildcard $(RUNTIME_PATH)/src/netif/*.c}
+### OBJ
+SYSTEM_OBJS 	= $(patsubst %.c,%.o,$(notdir $(SYSTEM_SRC)))	
+IRQ_OBJS 		= $(patsubst %.c,%.o,$(notdir $(IRQ_SRC)))	
+ASM_OBJS 		= $(patsubst %.S,%.o,$(notdir $(ASM_SRC)))
+NETIF_OBJS		= $(patsubst %.c,%.o,$(notdir $(NETIF_SRC)))	
+##############################################################################
+
+## TIMER_IRQ_IN_ASM, DMA_IRQ_IN_ASM
+TIMER_IRQ_PROC_IN_ASM   = 1
+DMA_IRQ_PROC_IN_ASM     = 0
+ifeq ("$(TIMER_IRQ_PROC_IN_ASM)", "1")
+    TIMER_IRQ_IN_ASM    = -DTIMER_IRQ_IN_ASM=1
+else
+    TIMER_IRQ_IN_ASM    = -DTIMER_IRQ_IN_ASM=0
+endif
+ifeq ("$(DMA_IRQ_PROC_IN_ASM)", "1")
+    DMA_IRQ_IN_ASM      = -DDMA_IRQ_IN_ASM=1
+else
+    DMA_IRQ_IN_ASM      = -DDMA_IRQ_IN_ASM=0
+endif
