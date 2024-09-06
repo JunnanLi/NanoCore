@@ -70,6 +70,7 @@ module N2_lsu (
   assign data_wdata_o = lsu_ctl_fetch.wdata;
   assign data_wstrb_o = lsu_ctl_fetch.wstrb & {4{lsu_ctl_fetch.we}};
   assign data_we_o    = lsu_ctl_fetch.we;
+  // assign rf_dst_lsu_ns_o  = data_gnt_i? lsu_ctl_fetch.rf_dst: lsu_ctl_rd.rf_dst;
   assign rf_dst_lsu_ns_o  = lsu_ctl_fetch.rf_dst;
   assign rf_we_lsu_o  = data_ready_i & ~lsu_ctl_rd.we;
   assign rf_dst_lsu_o = lsu_ctl_rd.rf_dst;
@@ -103,7 +104,8 @@ module N2_lsu (
       // end
 
 
-      lsq_rd_ptr      <= data_ready_i? (lsq_rd_ptr + 1): lsq_rd_ptr;
+      lsq_rd_ptr      <=  data_gnt_i & data_req_o & data_we_o | 
+                          data_ready_i? (lsq_rd_ptr + 1): lsq_rd_ptr;
       // //* respond
       // rf_we_lsu_o       <= 1'b0;
       // if (data_ready_i) begin

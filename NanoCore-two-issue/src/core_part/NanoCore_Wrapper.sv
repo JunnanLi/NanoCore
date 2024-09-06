@@ -8,7 +8,8 @@
 module NanoCore_Wrapper#(
   parameter [31:0] COREID = 2'b0
 ) (
-  input i_clk, i_rst_n,
+  input i_clk, i_rst_n, i_rst_soc_n,
+  output wire           flush_o,
 
   input  wire           data_gnt_i,
   output wire           data_req_o,
@@ -82,6 +83,8 @@ module NanoCore_Wrapper#(
   ) NanoCore(
     .clk              (i_clk          ),
     .resetn           (i_rst_n        ),
+    .resetn_soc       (i_rst_soc_n    ),
+    .flush_o          (flush_o        ),
     .trap             (               ),
 
     .data_gnt_i       (data_gnt_i     ),

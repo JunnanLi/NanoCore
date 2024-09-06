@@ -10,7 +10,7 @@
  */
 
 
-//`define SIM_PKT_IO
+// `define SIM_PKT_IO
 
 `ifndef SIM_PKT_IO
   `define GEN_A_PKT
@@ -107,7 +107,7 @@ localparam  GEN_FAKE_TIME_IRQ = 0;
   initial begin
   `ifndef SIM_PKT_IO
     #400000 $finish;
-    //#7509665 $finish;
+    //#3000000 $finish;
   `endif
   end
   

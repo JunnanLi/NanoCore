@@ -17,7 +17,8 @@ module NanoCore #(
   parameter [31:0] PROGADDR_RESET = 32'b0,
   parameter [31:0] PROGADDR_IRQ = 32'b0
 ) (
-  input                 clk, resetn,
+  input                 clk, resetn, resetn_soc,
+  output  wire          flush_o,
   output  reg           trap,
   
   input   wire          data_gnt_i,
@@ -68,7 +69,7 @@ module NanoCore #(
   wire is_branch_d2, is_branch_ex, is_branch_ex0, is_branch_ex1;
   assign is_branch_ex = is_branch_ex0 | is_branch_ex1;
   assign branch_pc_ex = is_branch_ex0? branch_pc_ex0: branch_pc_ex1;
-  wire flush = is_branch_d2 | is_branch_ex;
+  assign flush_o = is_branch_d2 | is_branch_ex;
   logic [31:0]  branch_pc;
   always_comb begin
     casez({is_branch_d2,is_branch_ex})
@@ -86,36 +87,81 @@ module NanoCore #(
   //* write rf
   always_ff @(posedge clk) begin
     for(integer i=1; i<32; i=i+1) begin
-      cpuregs[i] <= (~is_branch_ex && rf_we_d2 &&     rf_dst_d2 == i)?   alu_rst_idu:
-                    (~is_branch_ex && is_branch_d2 && rf_dst_d2 == i)?  (cur_pc_d2 + 4):
-                    (~is_branch_ex0 && rf_we_ex0 &&   rf_dst_ex0 == i)?  alu_rst_ex0:
-                    (is_branch_ex0 &&                 rf_dst_ex0 == i)? (cur_pc_ex0 + 4):
-                    (~is_branch_ex1 && rf_we_ex1 &&   rf_dst_ex1 == i)?  alu_rst_ex1:
-                    (is_branch_ex1 &&                 rf_dst_ex1 == i)? (cur_pc_ex1 + 4):
-                    (rf_we_lsu &&                     rf_dst_lsu == i)?  alu_rst_lsu:
-                    (rf_we_mu &&                      rf_dst_mu == i)?   alu_rst_mu: cpuregs[i];
+      (* parallel_case *)
+      case(1)
+        ~is_branch_ex  & rf_we_d2     & (rf_dst_d2 == i):   cpuregs[i] <= alu_rst_idu;
+        ~is_branch_ex  & is_branch_d2 & (rf_dst_d2 == i):   cpuregs[i] <= cur_pc_d2 + 4;
+        ~is_branch_ex0 & rf_we_ex0    & (rf_dst_ex0 == i):  cpuregs[i] <= alu_rst_ex0;
+         is_branch_ex0 &                (rf_dst_ex0 == i):  cpuregs[i] <= cur_pc_ex0 + 4;
+        ~is_branch_ex1 & rf_we_ex1    & (rf_dst_ex1 == i):  cpuregs[i] <= alu_rst_ex1;
+         is_branch_ex1 &                (rf_dst_ex1 == i):  cpuregs[i] <= cur_pc_ex1 + 4;
+         rf_we_lsu     &                (rf_dst_lsu == i):  cpuregs[i] <= alu_rst_lsu;
+         rf_we_mu      &                (rf_dst_mu == i):   cpuregs[i] <= alu_rst_mu;
+        default:                                            cpuregs[i] <= cpuregs[i];
+      endcase
+      // cpuregs[i] <= (~is_branch_ex && rf_we_d2 &&     rf_dst_d2 == i)?   alu_rst_idu:
+      //               (~is_branch_ex && is_branch_d2 && rf_dst_d2 == i)?  (cur_pc_d2 + 4):
+      //               (~is_branch_ex0 && rf_we_ex0 &&   rf_dst_ex0 == i)?  alu_rst_ex0:
+      //               (is_branch_ex0 &&                 rf_dst_ex0 == i)? (cur_pc_ex0 + 4):
+      //               (~is_branch_ex1 && rf_we_ex1 &&   rf_dst_ex1 == i)?  alu_rst_ex1:
+      //               (is_branch_ex1 &&                 rf_dst_ex1 == i)? (cur_pc_ex1 + 4):
+      //               (rf_we_lsu &&                     rf_dst_lsu == i)?  alu_rst_lsu:
+      //               (rf_we_mu &&                      rf_dst_mu == i)?   alu_rst_mu: cpuregs[i];
     end
   end
 
   //* read rf at d1; {lsu,ex1,ex0}
   wire [1:0][2:0] alu_op_bypass_m0_d1, alu_op_bypass_m1_d1;
   always_comb begin
-    cpuregs_rs1_m0 = alu_op_bypass_m0_d1[0][0]? alu_rst_ex0 : 
-                     alu_op_bypass_m0_d1[0][1]? alu_rst_ex1 :
-                     alu_op_bypass_m0_d1[0][2]? alu_rst_lsu :
-                    (uop_ctl_m0_d1.decoded_rs1 ? cpuregs[uop_ctl_m0_d1.decoded_rs1] : 'b0);
-    cpuregs_rs2_m0 = alu_op_bypass_m0_d1[1][0]? alu_rst_ex0 : 
-                     alu_op_bypass_m0_d1[1][1]? alu_rst_ex1 : 
-                     alu_op_bypass_m0_d1[1][2]? alu_rst_lsu :
-                    (uop_ctl_m0_d1.decoded_rs2 ? cpuregs[uop_ctl_m0_d1.decoded_rs2] : 'b0);
-    cpuregs_rs1_m1 = alu_op_bypass_m1_d1[0][0]? alu_rst_ex0 : 
-                     alu_op_bypass_m1_d1[0][1]? alu_rst_ex1 : 
-                     alu_op_bypass_m1_d1[0][2]? alu_rst_lsu :
-                    (uop_ctl_m1_d1.decoded_rs1 ? cpuregs[uop_ctl_m1_d1.decoded_rs1] : 'b0);
-    cpuregs_rs2_m1 = alu_op_bypass_m1_d1[1][0]? alu_rst_ex0 : 
-                     alu_op_bypass_m1_d1[1][1]? alu_rst_ex1 :
-                     alu_op_bypass_m1_d1[1][2]? alu_rst_lsu :
-                    (uop_ctl_m1_d1.decoded_rs2 ? cpuregs[uop_ctl_m1_d1.decoded_rs2] : 'b0);
+    (* parallel_case *)
+    case(1'b1)
+      alu_op_bypass_m0_d1[0][0]: cpuregs_rs1_m0 = alu_rst_ex0;
+      alu_op_bypass_m0_d1[0][1]: cpuregs_rs1_m0 = alu_rst_ex1;
+      alu_op_bypass_m0_d1[0][2]: cpuregs_rs1_m0 = alu_rst_lsu;
+      default:                   cpuregs_rs1_m0 = uop_ctl_m0_d1.decoded_rs1 ? 
+                                      cpuregs[uop_ctl_m0_d1.decoded_rs1] : 'b0;
+    endcase
+    (* parallel_case *)
+    case(1'b1)
+      alu_op_bypass_m0_d1[1][0]: cpuregs_rs2_m0 = alu_rst_ex0;
+      alu_op_bypass_m0_d1[1][1]: cpuregs_rs2_m0 = alu_rst_ex1;
+      alu_op_bypass_m0_d1[1][2]: cpuregs_rs2_m0 = alu_rst_lsu;
+      default:                   cpuregs_rs2_m0 = uop_ctl_m0_d1.decoded_rs2 ? 
+                                      cpuregs[uop_ctl_m0_d1.decoded_rs2] : 'b0;
+    endcase
+    (* parallel_case *)
+    case(1'b1)
+      alu_op_bypass_m1_d1[0][0]: cpuregs_rs1_m1 = alu_rst_ex0;
+      alu_op_bypass_m1_d1[0][1]: cpuregs_rs1_m1 = alu_rst_ex1;
+      alu_op_bypass_m1_d1[0][2]: cpuregs_rs1_m1 = alu_rst_lsu;
+      default:                   cpuregs_rs1_m1 = uop_ctl_m1_d1.decoded_rs1 ? 
+                                      cpuregs[uop_ctl_m1_d1.decoded_rs1] : 'b0;
+    endcase
+    (* parallel_case *)
+    case(1'b1)
+      alu_op_bypass_m1_d1[1][0]: cpuregs_rs2_m1 = alu_rst_ex0;
+      alu_op_bypass_m1_d1[1][1]: cpuregs_rs2_m1 = alu_rst_ex1;
+      alu_op_bypass_m1_d1[1][2]: cpuregs_rs2_m1 = alu_rst_lsu;
+      default:                   cpuregs_rs2_m1 = uop_ctl_m1_d1.decoded_rs2 ? 
+                                      cpuregs[uop_ctl_m1_d1.decoded_rs2] : 'b0;
+    endcase
+
+    // cpuregs_rs1_m0 = alu_op_bypass_m0_d1[0][0]? alu_rst_ex0 : 
+    //                  alu_op_bypass_m0_d1[0][1]? alu_rst_ex1 :
+    //                  alu_op_bypass_m0_d1[0][2]? alu_rst_lsu :
+    //                 (uop_ctl_m0_d1.decoded_rs1 ? cpuregs[uop_ctl_m0_d1.decoded_rs1] : 'b0);
+    // cpuregs_rs2_m0 = alu_op_bypass_m0_d1[1][0]? alu_rst_ex0 : 
+    //                  alu_op_bypass_m0_d1[1][1]? alu_rst_ex1 : 
+    //                  alu_op_bypass_m0_d1[1][2]? alu_rst_lsu :
+    //                 (uop_ctl_m0_d1.decoded_rs2 ? cpuregs[uop_ctl_m0_d1.decoded_rs2] : 'b0);
+    // cpuregs_rs1_m1 = alu_op_bypass_m1_d1[0][0]? alu_rst_ex0 : 
+    //                  alu_op_bypass_m1_d1[0][1]? alu_rst_ex1 : 
+    //                  alu_op_bypass_m1_d1[0][2]? alu_rst_lsu :
+    //                 (uop_ctl_m1_d1.decoded_rs1 ? cpuregs[uop_ctl_m1_d1.decoded_rs1] : 'b0);
+    // cpuregs_rs2_m1 = alu_op_bypass_m1_d1[1][0]? alu_rst_ex0 : 
+    //                  alu_op_bypass_m1_d1[1][1]? alu_rst_ex1 :
+    //                  alu_op_bypass_m1_d1[1][2]? alu_rst_lsu :
+    //                 (uop_ctl_m1_d1.decoded_rs2 ? cpuregs[uop_ctl_m1_d1.decoded_rs2] : 'b0);
   end
 
   always_ff @(posedge clk) begin
@@ -146,12 +192,12 @@ module NanoCore #(
 
 `ifdef ENABLE_BP
   //* do not update "not jump predictor"
-  wire          btb_upd_v_ex, btb_upd_v_ex0, btb_upd_v_ex1;
-  btb_update_t  btb_upd_info_ex, btb_upd_info_ex0, btb_upd_info_ex1;
+  wire          btb_upd_v_d2, btb_upd_v_ex, 
+                btb_upd_v_ex0, btb_upd_v_ex1;
+  btb_t         btb_upd_d2, btb_upd_info_ex, 
+                btb_upd_info_ex0, btb_upd_info_ex1;
   wire          btb_ctl_m0_v_ifu, btb_ctl_m1_v_ifu;
   btb_ctl_t     btb_ctl_m0_ifu, btb_ctl_m1_ifu, btb_ctl_d2;
-  wire          sbp_upd_v_d1;
-  sbp_update_t  sbp_upd_d1;
   assign btb_upd_v_ex = btb_upd_v_ex0 | btb_upd_v_ex1;
   assign btb_upd_info_ex = btb_upd_v_ex0? btb_upd_info_ex0: btb_upd_info_ex1;
 `endif
@@ -163,22 +209,24 @@ module NanoCore #(
   ) u_ifu(
     .clk              (clk),
     .resetn           (resetn),
+    .resetn_soc       (resetn_soc),
 
-    .flush_i          (flush            ),
+    .flush_i          (flush_o          ),
     .branch_pc_i      (branch_pc        ),
     .instr_gnt_i      (instr_gnt_i      ),
     .instr_req_o      (instr_req_o      ),
     .instr_req_2b_o   (instr_req_2b_o   ),
     .instr_addr_o     (instr_addr_o     ),
   `ifdef ENABLE_BP  
-    .btb_upd_v_i      (btb_upd_v_ex     ),
-    .btb_upd_info_i   (btb_upd_info_ex  ),
+    .btb_upd_v_ex_i   (btb_upd_v_ex     ),
+    .btb_upd_ex_i     (btb_upd_info_ex  ),
+    .btb_upd_v_d2_i   (btb_upd_v_d2     ),
+    .btb_upd_d2_i     (btb_upd_d2       ),
     .btb_ctl_m0_v_o   (btb_ctl_m0_v_ifu ),
     .btb_ctl_m0_o     (btb_ctl_m0_ifu   ),
     .btb_ctl_m1_v_o   (btb_ctl_m1_v_ifu ),
     .btb_ctl_m1_o     (btb_ctl_m1_ifu   ),
-    .sbp_upd_v_i      (sbp_upd_v_d1     ),
-    .sbp_upd_i        (sbp_upd_d1       ),
+    .cpuregs_x1       (cpuregs[1][15:0] ),
   `endif
     .iq_prefetch_ptr  (iq_prefetch_ptr  ),
     .iq_rd_ptr        (iq_rd_ptr        )
@@ -194,12 +242,17 @@ module NanoCore #(
     .clk              (clk),
     .resetn           (resetn),
 
+    .alu_op_bypass_m0_d1_o(alu_op_bypass_m0_d1),
+    .alu_op_bypass_m1_d1_o(alu_op_bypass_m1_d1),
     .cpuregs_rs1_m0   (cpuregs_rs1_m0   ),
     .cpuregs_rs2_m0   (cpuregs_rs2_m0   ),
     .cpuregs_rs1_m1   (cpuregs_rs1_m1   ),
     .cpuregs_rs2_m1   (cpuregs_rs2_m1   ),
     .rf_we_d2_o       (rf_we_d2         ),
     .rf_dst_d2_o      (rf_dst_d2        ),
+    .alu_rst_d2_o     (alu_rst_idu      ),
+    .is_branch_d2_o   (is_branch_d2     ),
+    .branch_pc_d2_o   (branch_pc_d2     ),
 
     .alu_op1_2ex0_d2_o(alu_op1_2ex0_d2  ),
     .alu_op2_2ex0_d2_o(alu_op2_2ex0_d2  ),
@@ -209,26 +262,11 @@ module NanoCore #(
     .alu_op2_2mu_d2_o (alu_op2_2mu_d2   ),
     .alu_op1_2lsu_d2_o(alu_op1_2lsu_d2  ),
     .alu_op2_2lsu_d2_o(alu_op2_2lsu_d2  ),
-    // .alu_op1_d2_o     (alu_op1_idu      ),
-    // .alu_op2_d2_o     (alu_op2_idu      ),
-    .alu_rst_d2_o     (alu_rst_idu      ),
-    .is_branch_d2_o   (is_branch_d2     ),
-    .branch_pc_d2_o   (branch_pc_d2     ),
-    .uid_we_d2_o      (uid_we_d2        ),
-    .uid_d2_o         (uid_d2           ),
-    .uid_ready_we_d2_o(uid_ready_we_d2  ),
-    .uid_2ex0_d2_o    (uid_2ex0_d2      ),
-    .uid_2ex1_d2_o    (uid_2ex1_d2      ),
-    .uid_2mu_d2_o     (uid_2mu_d2       ),
-    .uid_2lsu_d2_o    (uid_2lsu_d2      ),
-
-    .pc_d2_o          (cur_pc_d2        ),
-    .pc_2ex_d2_o      (pc_2ex_d2        ),
-    // .pc_d1_o          (reg_pc_d1        ),
-    .irq_mask_o       (irq_mask         ),
-
-    .iq_prefetch_ptr  (iq_prefetch_ptr  ),
-    .iq_rd_ptr_o      (iq_rd_ptr        ),
+    .to_ex0_v_o       (to_ex0_v         ),
+    .to_ex1_v_o       (to_ex1_v         ),
+    .to_ld_v_o        (to_ld_v          ),
+    .to_st_v_o        (to_st_v          ),
+    .to_mu_v_o        (to_mu_v          ),
     .uop_ctl_m0_d1_o  (uop_ctl_m0_d1    ),
     .uop_ctl_m1_d1_o  (uop_ctl_m1_d1    ),
     .uop_ctl_m0_d2_o  (uop_ctl_m0_d2    ),
@@ -237,18 +275,26 @@ module NanoCore #(
     .uop_ctl_2ex1_d2_o(uop_ctl_2ex1_d2  ),
     .uop_ctl_2lsu_d2_o(uop_ctl_2lsu_d2  ),
     .uop_ctl_2mu_d2_o (uop_ctl_2mu_d2   ),
-    .alu_op_bypass_m0_d1_o(alu_op_bypass_m0_d1),
-    .alu_op_bypass_m1_d1_o(alu_op_bypass_m1_d1),
+  `ifdef SIM_FIFO_RAM  
+    .uid_we_d2_o      (uid_we_d2        ),
+    .uid_d2_o         (uid_d2           ),
+    .uid_ready_we_d2_o(uid_ready_we_d2  ),
+    .uid_2ex0_d2_o    (uid_2ex0_d2      ),
+    .uid_2ex1_d2_o    (uid_2ex1_d2      ),
+    .uid_2mu_d2_o     (uid_2mu_d2       ),
+    .uid_2lsu_d2_o    (uid_2lsu_d2      ),
+  `endif
+    .pc_d2_o          (cur_pc_d2        ),
+    .pc_2ex_d2_o      (pc_2ex_d2        ),
+    // .pc_d1_o          (reg_pc_d1        ),
+
+    .iq_prefetch_ptr  (iq_prefetch_ptr  ),
+    .iq_rd_ptr_o      (iq_rd_ptr        ),
     .instr_ready_i    (instr_ready_i    ),
     .instr_rdata_i    (instr_rdata_i    ),
     .is_branch_ex_i   (is_branch_ex     ),
 
-    .to_ex0_v_o       (to_ex0_v         ),
-    .to_ex1_v_o       (to_ex1_v         ),
-    .to_ld_v_o        (to_ld_v          ),
-    .to_st_v_o        (to_st_v          ),
-    .to_mu_v_o        (to_mu_v          ),
-
+    .irq_mask_o       (irq_mask         ),
     .irq_offset_i     (irq_offset       ),
     .irq_ack_o        (o_irq_ack        ),
     .irq_id_o         (o_irq_id         ),
@@ -275,8 +321,8 @@ module NanoCore #(
     .btb_ctl_m1_v_i   (btb_ctl_m1_v_ifu ),
     .btb_ctl_m1_i     (btb_ctl_m1_ifu   ),
     .btb_ctl_d2_o     (btb_ctl_d2       ),
-    .sbp_upd_v_d1_o   (sbp_upd_v_d1     ),
-    .sbp_upd_d1_o     (sbp_upd_d1       ),
+    .btb_upd_v_d1_o   (btb_upd_v_d2     ),
+    .btb_upd_d1_o     (btb_upd_d2       ),
   `endif
 
     .count_cycle_o    (count_cycle      ),
@@ -389,6 +435,7 @@ N2_mu u_mu (
 
 
 
+`ifdef SIM_FIFO_RAM  
   reg [31:0]  cnt_clk;
   always @(posedge clk or negedge resetn) begin
     if(!resetn) begin
@@ -410,14 +457,10 @@ N2_mu u_mu (
 
   always @(posedge clk) begin
     if(btb_upd_v_ex) begin
-      $fwrite(out_btb_file, "%d, %d, %d, %04x, %04x, %01x, %d\n", 
-                                      btb_upd_info_ex.update_bht,
-                                      btb_upd_info_ex.inc_bht,
-                                      btb_upd_info_ex.update_tgt,
+      $fwrite(out_btb_file, "%04x, %04x, %d\n", 
                                       btb_upd_info_ex.tgt,
                                       btb_upd_info_ex.pc,
-                                      btb_upd_info_ex.entryID,
-                                      btb_upd_info_ex.insert_btb);
+                                      btb_upd_info_ex.valid);
       $fwrite(out_btb_file_w_clk, "clk:%08x\n",cnt_clk);
     end
     
@@ -628,5 +671,6 @@ N2_mu u_mu (
       end
     end
   end
+`endif
 
 endmodule

@@ -14,6 +14,7 @@ module NanoCache_Update (
   //* clk & reset;
   input   wire                            i_clk,
   input   wire                            i_rst_n,
+  input   wire  [`NUM_PE-1:0]             i_flush,
 
   input   wire  [`NUM_PE-1:0]             i_miss_rden,
   input   wire  [`NUM_PE-1:0]             i_miss_wren,
@@ -84,9 +85,9 @@ module NanoCache_Update (
       for(i=0; i<4; i=i+1)
         r_tag_read[i]           <= 'b0;
     end else begin
-      r_tag_read[0]             <= w_miss_resp[`NUM_PE-1:0] & i_miss_rden[`NUM_PE-1:0];
+      r_tag_read[0]             <= w_miss_resp[`NUM_PE-1:0] & i_miss_rden[`NUM_PE-1:0] & ~i_flush;
       for(i=1; i<4; i=i+1)
-        r_tag_read[i]           <= r_tag_read[i-1];
+        r_tag_read[i]           <= r_tag_read[i-1] & ~i_flush;
     end
   end
 

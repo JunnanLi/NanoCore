@@ -19,6 +19,7 @@ module NanoCache_Search #(
   //* clk & reset;
   input   wire                        i_clk,
   input   wire                        i_rst_n,
+  input   wire                        i_flush,
 
   //* interface for PEs;
   input   wire                        i_cache_rden,
@@ -63,6 +64,7 @@ module NanoCache_Search #(
   reg   [31:0]                        q_cache_wdata, q_cache_addr;
   reg   [ 3:0]                        q_cache_wstrb;
   reg   [RDEN_WIDTH-1:0]              q_cache_rden;
+  reg                                 q_cache_req;
   reg   [63:0]                        r_cache_rdata;
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
 
@@ -126,11 +128,11 @@ module NanoCache_Search #(
     end else begin
       //* serach;
       r_upd_valid_delay       <= i_upd_valid;
-      r_lock_gnt              <=  r_upd_valid_delay? 1'b1: 
+      r_lock_gnt              <=  (r_upd_valid_delay|i_flush)? 1'b1: 
                                   (o_miss_rden|o_miss_wren)? 1'b0: r_lock_gnt;
 
       o_cache_rvalid          <= '0;
-      o_miss_rden             <= i_miss_resp? 1'b0: o_miss_rden;
+      o_miss_rden             <= (i_miss_resp|i_flush)? 1'b0: o_miss_rden;
       o_miss_wren             <= i_miss_resp? 1'b0: o_miss_wren;
       o_miss_addr             <= i_miss_resp? {5'b0,i_cache_addr[31:5]} : o_miss_addr;
       r_re_rden               <= 1'b0;
@@ -155,7 +157,7 @@ module NanoCache_Search #(
           r_wait_to_rd_after_wr  <= w_miss_tag_dirty;
           for(integer i=0; i<`NUM_CACHE; i=i+1)
             if(r_vic[i]) begin
-              r_tag_addr[i]   <= i_cache_addr[5+:16];
+              // r_tag_addr[i]   <= i_cache_addr[5+:16];
               r_tag_dirty[i]  <= 1'b0;
             end
         end
@@ -198,7 +200,7 @@ module NanoCache_Search #(
           r_wait_to_read      <= w_miss_tag_dirty;
           for(integer i=0; i<`NUM_CACHE; i=i+1)
             if(r_vic[i]) begin
-              r_tag_addr[i]   <= i_cache_addr[5+:16];
+              // r_tag_addr[i]   <= i_cache_addr[5+:16];
               r_tag_dirty[i]  <= 1'b0;
             end
         end
@@ -221,8 +223,13 @@ module NanoCache_Search #(
         end
       end
     
+      //* meet flush
+      if(i_flush & (i_cache_rden | ~o_cache_gnt & q_cache_req)) begin
+        o_cache_rvalid        <= i_cache_rden? i_cache_rden_v: q_cache_rden;
+      end
+
       //* update
-      if(i_upd_valid) begin
+      if(i_upd_valid & q_cache_req & ~i_flush) begin
         // r_tag_addr          <= r_temp_addr; TODO,
         r_vic                 <= {r_vic[`NUM_CACHE-2:0],r_vic[`NUM_CACHE-1]};
       `ifdef WRITE_AFTER_READ
@@ -238,6 +245,7 @@ module NanoCache_Search #(
             r_cached_data[i]  <= w_upd_rdata;
             r_tag_valid[i]    <= 1'b1;
             r_tag_dirty[i]    <= ~r_temp_rdwr;
+            r_tag_addr[i]     <= q_cache_addr[5+:16];
           end
         end
       end
@@ -261,11 +269,13 @@ module NanoCache_Search #(
   end
 
   always_ff @(posedge i_clk) begin
+    q_cache_req       <= i_upd_valid? '0: ~i_flush &  q_cache_req;
     if(o_cache_gnt) begin
       q_cache_wdata   <= i_cache_wdata;
       q_cache_wstrb   <= i_cache_wstrb;
       q_cache_addr    <= i_cache_addr;
       q_cache_rden    <= i_cache_rden_v | {RDEN_WIDTH{i_cache_wren}};
+      q_cache_req     <= i_cache_rden | i_cache_wren;
     end
   end
 

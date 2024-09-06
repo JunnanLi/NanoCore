@@ -101,8 +101,8 @@ module N2_idu #(
   input   wire          btb_ctl_m1_v_i,
   input   btb_ctl_t     btb_ctl_m1_i,
   output  btb_ctl_t     btb_ctl_d2_o,
-  output  wire          sbp_upd_v_d1_o,
-  output  sbp_update_t  sbp_upd_d1_o,
+  output  wire          btb_upd_v_d1_o,
+  output  btb_t         btb_upd_d1_o,
 `endif
 
   output  wire  [63:0]  count_instr_o,
@@ -117,10 +117,9 @@ module N2_idu #(
     end
   `endif
 
-
   reg   [31:0]  alu_op1_m0_d2, alu_op2_m0_d2,
                 alu_op1_m1_d2, alu_op2_m1_d2;
-  reg           ex_sel, mu_sel, lsu_sel;
+  reg           ex_sel, mu_sel, lsu_sel;  //* select m0/m1;
   //* alu_op
   assign alu_op1_2ex0_d2_o  = alu_op1_m0_d2;
   assign alu_op2_2ex0_d2_o  = alu_op2_m0_d2;
@@ -151,8 +150,8 @@ module N2_idu #(
   assign to_mu_v_o = ~is_branch_ex_i & to_mu_v;
   reg is_branch_ex_delay;
   //* irq
-  reg irq_ack_d2;
   wire irq_ack_d1;
+  reg  irq_ack_d2;
   assign irq_ack_o = ~is_branch_ex_i & ~is_branch_ex_delay & irq_ack_d2;
 
   reg           irq_processing, irq_processing_delay1;
@@ -441,8 +440,8 @@ module N2_idu #(
     .btb_ctl_m1_i     (btb_ctl_m1_i     ),
     .btb_ctl_m0_d1_o  (btb_ctl_m0_d1    ),
     .btb_ctl_m1_d1_o  (btb_ctl_m1_d1    ),
-    .sbp_upd_v_d1_o   (sbp_upd_v_d1_o   ),
-    .sbp_upd_d1_o     (sbp_upd_d1_o     ),
+    .btb_upd_v_d1_o   (btb_upd_v_d1_o   ),
+    .btb_upd_d1_o     (btb_upd_d1_o     ),
   `endif
 
     .count_cycle      (count_cycle_o    ),

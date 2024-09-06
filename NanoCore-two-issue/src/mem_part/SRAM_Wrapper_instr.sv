@@ -12,7 +12,7 @@
  *      "conf_sel" to distinguish configuring or running mode.
  */
 
-  module SRAM_Wrapper (
+  module SRAM_Wrapper_instr (
       input                 clk,
       input                 rst_n,
       //* prot a
@@ -20,112 +20,120 @@
       input                 rda,
       input         [31:0]  addra,
       input         [31:0]  dina,
+      input         [ 3:0]  stra,
       output  wire  [31:0]  douta,
       //* prot b
       input                 web,
       input                 rdb,
       input         [31:0]  addrb,
       input         [31:0]  dinb,
+      input         [ 3:0]  strb,
       output  wire  [31:0]  doutb
   );
+genvar idx;  
+generate for(idx = 0; idx <4; idx=idx+1) begin: gen_8b_ram
   `ifdef MEM_256KB
     `ifdef XILINX_FIFO_RAM
-      ram_32_4096 mem(
+      ram_8_4096_instr mem(
         .clka   (clk                ),
-        .wea    (wea                ),
+        .wea    (wea & stra[idx]    ),
         .addra  (addra[11:0]        ),
-        .dina   (dina               ),
-        .douta  (douta              ),
+        .dina   (dina[idx*8+:8]     ),
+        .douta  (douta[idx*8+:8]    ),
         .clkb   (clk                ),
-        .web    (web                ),
+        .web    (web & strb[idx]    ),
         .addrb  (addrb[11:0]        ),
-        .dinb   (dinb               ),
-        .doutb  (doutb              )
+        .dinb   (dinb[idx*8+:8]     ),
+        .doutb  (doutb[idx*8+:8]    ),
       );
     `elsif SIM_FIFO_RAM
       syncram mem(
         .address_a  (addra[11:0]    ),
         .address_b  (addrb[11:0]    ),
         .clock      (clk            ),
-        .data_a     (dina           ),
-        .data_b     (dinb           ),
+        .data_a     (dina[idx*8+:8] ),
+        .data_b     (dinb[idx*8+:8] ),
         .rden_a     (rda            ),
         .rden_b     (rdb            ),
-        .wren_a     (wea            ),
-        .wren_b     (web            ),
-        .q_a        (douta          ),
-        .q_b        (doutb          )
+        .wren_a     (wea & stra[idx]),
+        .wren_b     (web & strb[idx]),
+        .q_a        (douta[idx*8+:8]),
+        .q_b        (doutb[idx*8+:8])
       );
-      defparam  mem.width = 32,
+      defparam  mem.BUFFER= 0,
+                mem.width = 8,
                 mem.depth = 12,
                 mem.words = 4096;
     `endif
   `elsif MEM_128KB
     `ifdef XILINX_FIFO_RAM
-      ram_32_2048 mem(
+      ram_8_2048_instr mem(
         .clka   (clk                ),
-        .wea    (wea                ),
+        .wea    (wea & stra[idx]    ),
         .addra  (addra[10:0]        ),
-        .dina   (dina               ),
-        .douta  (douta              ),
+        .dina   (dina[idx*8+:8]     ),
+        .douta  (douta[idx*8+:8]    ),
         .clkb   (clk                ),
-        .web    (web                ),
+        .web    (web & strb[idx]    ),
         .addrb  (addrb[10:0]        ),
-        .dinb   (dinb               ),
-        .doutb  (doutb              )
+        .dinb   (dinb[idx*8+:8]     ),
+        .doutb  (doutb[idx*8+:8]    ),
       );
     `elsif SIM_FIFO_RAM
       syncram mem(
         .address_a  (addra[10:0]    ),
         .address_b  (addrb[10:0]    ),
         .clock      (clk            ),
-        .data_a     (dina           ),
-        .data_b     (dinb           ),
+        .data_a     (dina[idx*8+:8] ),
+        .data_b     (dinb[idx*8+:8] ),
         .rden_a     (rda            ),
         .rden_b     (rdb            ),
-        .wren_a     (wea            ),
-        .wren_b     (web            ),
-        .q_a        (douta          ),
-        .q_b        (doutb          )
+        .wren_a     (wea & stra[idx]),
+        .wren_b     (web & strb[idx]),
+        .q_a        (douta[idx*8+:8]),
+        .q_b        (doutb[idx*8+:8])
       );
-      defparam  mem.width = 32,
+      defparam  mem.BUFFER= 0,
+                mem.width = 8,
                 mem.depth = 11,
                 mem.words = 2048;
     `endif
   `elsif MEM_64KB
     `ifdef XILINX_FIFO_RAM
-      ram_32_1024 mem(
+      ram_8_1024_instr mem(
         .clka   (clk                ),
-        .wea    (wea                ),
+        .wea    (wea & stra[idx]    ),
         .addra  (addra[9:0]         ),
-        .dina   (dina               ),
-        .douta  (douta              ),
+        .dina   (dina[idx*8+:8]     ),
+        .douta  (douta[idx*8+:8]    ),
         .clkb   (clk                ),
-        .web    (web                ),
+        .web    (web & strb[idx]    ),
         .addrb  (addrb[9:0]         ),
-        .dinb   (dinb               ),
-        .doutb  (doutb              )
+        .dinb   (dinb[idx*8+:8]     ),
+        .doutb  (doutb[idx*8+:8]    ),
       );
     `elsif SIM_FIFO_RAM
       syncram mem(
         .address_a  (addra[9:0]     ),
         .address_b  (addrb[9:0]     ),
         .clock      (clk            ),
-        .data_a     (dina           ),
-        .data_b     (dinb           ),
+        .data_a     (dina[idx*8+:8] ),
+        .data_b     (dinb[idx*8+:8] ),
         .rden_a     (rda            ),
         .rden_b     (rdb            ),
-        .wren_a     (wea            ),
-        .wren_b     (web            ),
-        .q_a        (douta          ),
-        .q_b        (doutb          )
+        .wren_a     (wea & stra[idx]),
+        .wren_b     (web & strb[idx]),
+        .q_a        (douta[idx*8+:8]),
+        .q_b        (doutb[idx*8+:8])
       );
-      defparam  mem.width = 32,
+      defparam  mem.BUFFER= 0,
+                mem.width = 8,
                 mem.depth = 10,
                 mem.words = 1024;
     `endif
   `endif
-
+  end
+endgenerate
   // genvar i_ram;
   // generate
   //   for (i_ram = 0; i_ram < 4; i_ram = i_ram+1) begin: gen_8b_ram

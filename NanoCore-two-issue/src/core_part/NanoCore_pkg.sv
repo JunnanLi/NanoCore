@@ -135,37 +135,38 @@ package NanoCore_pkg;
     logic         valid;
     logic [15:0]  pc;
     logic [15:0]  tgt;
-    logic [1:0]   bht;
+    logic         is_jarl;
+    // logic [1:0]   bht;
   } btb_t;
 
+  // typedef struct packed {
+  //   logic         update_bht;
+  //   logic         inc_bht;
+  //   logic         update_tgt;
+  //   logic [15:0]  tgt;
+  //   logic [15:0]  pc;
+  //   logic [3:0]   entryID;
+  //   logic         insert_btb;   //* update or insert;
+  // } btb_update_t;
   typedef struct packed {
-    logic         update_bht;
-    logic         inc_bht;
-    logic         update_tgt;
-    logic [15:0]  tgt;
-    logic [15:0]  pc;
-    logic [3:0]   entryID;
-    logic         insert_btb;   //* update or insert;
-  } btb_update_t;
-  typedef struct packed {
-    logic         hit;
-    logic         sbp_hit;
+    // logic         hit;
+    // logic         sbp_hit;
     logic         jump;
     logic [15:0]  tgt;
-    logic [15:0]   pc;
-    logic [3:0]   entryID;
+    logic [15:0]  pc;
+    // logic [3:0]   entryID;
   } btb_ctl_t;
 
-  //* sbp;
-  typedef struct packed {
-    logic         valid;
-    logic [15:0]  pc;
-    logic [15:0]  tgt;
-  } sbp_t;
-  typedef struct packed {
-    logic [15:0]  tgt;
-    logic [15:0]  pc;
-  } sbp_update_t;
+  // //* sbp;
+  // typedef struct packed {
+  //   logic         valid;
+  //   logic [15:0]  pc;
+  //   logic [15:0]  tgt;
+  // } sbp_t;
+  // typedef struct packed {
+  //   logic [15:0]  tgt;
+  //   logic [15:0]  pc;
+  // } sbp_update_t;
 
   typedef struct packed {
     logic [31:0]  addr;
@@ -179,19 +180,6 @@ package NanoCore_pkg;
     logic [regindex_bits-1:0] rf_dst;
     logic [7:0]   uid;
   } lsu_ctl_t;
-
-  // typedef struct packed {
-  //   //* extract
-  //   logic [TYPE_NUM-1:0][TYPE_OFFSET_WIDTH-1:0]   type_offset;
-  //   logic [KEY_FILED_NUM-1:0][0:0]                key_offset_v;
-  //   logic [KEY_FILED_NUM-1:0][KEY_OFFSET_WIDTH-1:0]key_offset;
-  //   logic [META_CANDI_NUM-1:0][REP_OFFSET_WIDTH:0]key_replaceOffset;
-  //   logic [HEAD_SHIFT_WIDTH-1:0]                  headShift;
-  //   logic [META_SHIFT_WIDTH-1:0]                  metaShift;
-  //   //* data
-  //   logic [HEAD_WIDTH+TAG_WIDTH-1:0]  head;
-  //   logic [META_WIDTH+TAG_WIDTH-1:0]  meta;
-  // } layer_info_t;
 
 `ifdef DEBUG
   `define debug(debug_command) debug_command

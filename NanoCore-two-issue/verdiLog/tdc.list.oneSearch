@@ -1,10 +1,9 @@
-./src/mem_part/Cache/NanoCache_Update.sv
 ./src/core_part/N2_idu_predecode.sv
+./src/mem_part/Cache/NanoCache_Search_1PE.sv
 ./src/core_part/Irq_Calc_Offset.sv
 ./src/NanoCore_SoC.sv
 ./src/peripherals_part/pkt_part/Pkt_MUX.sv
 ./src/core_part/NanoCore_pkg.sv
-./src/mem_part/Cache/NanoCache_Search.sv
 ./src/peripherals_part/pkt_part/Pkt_DMUX.sv
 ./src/peripherals_part/uart_part/UART_Recv.v
 ./src/peripherals_part/pkt_part/dma_part/regfifo_32b_4.v
@@ -12,6 +11,7 @@
 ./src/peripherals_part/pkt_part/Pkt_Proc_Top.sv
 ./src/peripherals_part/uart_part/Gen_Baud_Rate.v
 ./src/peripherals_part/pkt_part/dma_part/regfifo_64b_8.v
+./src/mem_part/SRAM_Wrapper_instr.sv
 ./src/peripherals_part/Peri_Top.sv
 ./src/core_part/NanoCore_Wrapper.sv
 ./src/sim_rtl/syncram.v
@@ -38,6 +38,7 @@
 ./src/core_part/MultiCore_Top.sv
 ./src/core_part/N2_lsu.sv
 ./src/core_part/N2_exec.sv
+./src/mem_part/Cache/NanoCache_Update_1PE.sv
 ./src/sim_rtl/syncfifo.v
 ./src/core_part/N2_idu.sv
 ./testbench.sv

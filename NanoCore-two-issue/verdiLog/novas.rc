@@ -377,17 +377,18 @@ savePropDtl = TRUE
 ActiveFileDialog = 830,468,458,279
 usrMarkerDialog_SaveMarkerReport = 700,365,590,340
 CreateBusDialog = 665,216,788,709
+ExpressionDialog = 670,361,778,493
 ExpandBusDialog = 1586,725,407,117
 AdjustBusDialog = 1571,668,438,232
 EditBusSimDialog = 1576,705,428,158
 openFileDlg = 694,330,602,483
+FileWithNoteForm_base = 668,350,653,443
 searchScope_base = 716,261,558,548
 QwInfoMsgDlg = 609,904,750,250
+QwWarnMsgDlg = 733,830,600,324
 usrMarkerDialog = 1390,634,800,300
-QwWarnMsgDlg = 733,978,600,324
 restoreSigDlg = 1514,565,551,438
 saveSigDlg = 1514,591,551,386
-ExpressionDialog = 1401,537,778,493
 QwUserAskDlg = 1628,717,324,134
 [Relationship]
 hideRecursiceNode = FALSE
@@ -665,33 +666,33 @@ DefaultLogTimeUnit = "1.000000ns"
 [VIA.oneSearch.preference.vgifColumnSettingRC.setting0]
 parRuleSets = ""
 [VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column0]
-name = Severity
-width = 60
-visualIndex = 1
-isHidden = TRUE
-isUserChangeColumnVisible = FALSE
-[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column1]
-name = Code
-width = 60
-visualIndex = 2
-isHidden = TRUE
-isUserChangeColumnVisible = FALSE
-[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column2]
-name = Type
-width = 60
-visualIndex = 3
-isHidden = TRUE
-isUserChangeColumnVisible = FALSE
-[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column3]
 name = Message
 width = 2000
 visualIndex = 4
 isHidden = FALSE
 isUserChangeColumnVisible = FALSE
-[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column4]
+[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column1]
 name = Time
 width = 60
 visualIndex = 0
+isHidden = TRUE
+isUserChangeColumnVisible = FALSE
+[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column2]
+name = Code
+width = 60
+visualIndex = 2
+isHidden = TRUE
+isUserChangeColumnVisible = FALSE
+[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column3]
+name = Type
+width = 60
+visualIndex = 3
+isHidden = TRUE
+isUserChangeColumnVisible = FALSE
+[VIA.oneSearch.preference.vgifColumnSettingRC.setting0.column4]
+name = Severity
+width = 60
+visualIndex = 1
 isHidden = TRUE
 isUserChangeColumnVisible = FALSE
 [Vi]
@@ -713,7 +714,7 @@ scope_to_save_with_macro
 open_file_dir
 open_rc_file_dir
 getSignalForm = 0 0 800 479 100 30 100 30
-viewPort = 0 27 3300 578 268 464
+viewPort = 0 27 3300 705 268 464
 signalSpacing = 5
 digitalSignalHeight = 15
 analogSignalHeight = 98
@@ -1314,7 +1315,7 @@ AddImportArgument = FALSE
 LineBreakWithScope = TRUE
 StopAfterCompileOption = -s
 [wave.0]
-viewPort = 0 27 3300 578 268 464
+viewPort = 0 27 3300 705 268 464
 [wave.1]
 viewPort = 127 219 960 332 100 65
 [wave.2]

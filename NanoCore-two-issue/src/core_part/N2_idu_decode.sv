@@ -24,6 +24,8 @@ module N2_idu_decode #(
   output  uop_ctl_t     uop_ctl_m1_d1_o,
   output  reg   [1:0][2:0] alu_op_bypass_m0_d1_o,
   output  reg   [1:0][2:0] alu_op_bypass_m1_d1_o,
+  output  reg   [1:0][2:0] alu_op_bypass_m0_d2_o,
+  output  reg   [1:0][2:0] alu_op_bypass_m1_d2_o,
   output  reg   [31:0]  pc_m0_d1_o,
   output  reg   [31:0]  pc_m1_d1_o,
   input   wire          flush_i,
@@ -62,8 +64,8 @@ module N2_idu_decode #(
   input   btb_ctl_t     btb_ctl_m1_i,
   output  btb_ctl_t     btb_ctl_m0_d1_o,
   output  btb_ctl_t     btb_ctl_m1_d1_o,
-  output  reg           sbp_upd_v_d1_o,
-  output  sbp_update_t  sbp_upd_d1_o,
+  output  reg           btb_upd_v_d1_o,
+  output  btb_t         btb_upd_d1_o,
 `endif
 
   output  reg   [63:0]  count_cycle,
@@ -87,7 +89,7 @@ module N2_idu_decode #(
     uop_ctl_m1_v_d1           <= '0;
     uop_ctl_m0_d1_o           <= '0;
     uop_ctl_m1_d1_o           <= '0;
-    sbp_upd_v_d1_o            <= '0;
+    btb_upd_v_d1_o            <= '0;
     irq_ack_o                 <= 1'b0;
     alu_op_bypass_m0_d1_o[0]  <= {3{~scb[uop_ctl_m0_d0.decoded_rs1].ready & 
                                      scb[uop_ctl_m0_d0.decoded_rs1].stage[0]}} & 
@@ -101,14 +103,25 @@ module N2_idu_decode #(
     alu_op_bypass_m1_d1_o[1]  <= {3{~scb[uop_ctl_m1_d0.decoded_rs2].ready & 
                                      scb[uop_ctl_m1_d0.decoded_rs2].stage[0]}} & 
                                   scb[uop_ctl_m1_d0.decoded_rs2].alu;
+    alu_op_bypass_m0_d2_o[0]  <= {3{~scb[uop_ctl_m0_d0.decoded_rs1].ready & 
+                                     scb[uop_ctl_m0_d0.decoded_rs1].stage[1]}} & 
+                                  scb[uop_ctl_m0_d0.decoded_rs1].alu;
+    alu_op_bypass_m0_d2_o[1]  <= {3{~scb[uop_ctl_m0_d0.decoded_rs2].ready & 
+                                     scb[uop_ctl_m0_d0.decoded_rs2].stage[1]}} & 
+                                  scb[uop_ctl_m0_d0.decoded_rs2].alu;
+    alu_op_bypass_m1_d2_o[0]  <= {3{~scb[uop_ctl_m1_d0.decoded_rs1].ready & 
+                                     scb[uop_ctl_m1_d0.decoded_rs1].stage[1]}} & 
+                                  scb[uop_ctl_m1_d0.decoded_rs1].alu;
+    alu_op_bypass_m1_d2_o[1]  <= {3{~scb[uop_ctl_m1_d0.decoded_rs2].ready & 
+                                     scb[uop_ctl_m1_d0.decoded_rs2].stage[1]}} & 
+                                  scb[uop_ctl_m1_d0.decoded_rs2].alu;
     irq_processing_d1_o       <= 1'b0;
+    btb_upd_d1_o.is_jarl      <= 0;
     if(!resetn) begin
       irq_processing_d1_o     <= 1'b0;
       iq_rd_ptr               <= '0;
       uop_ctl_m0_v_d1         <= '0;
       uop_ctl_m1_v_d1         <= '0;
-      alu_op_bypass_m0_d1_o   <= '0;
-      alu_op_bypass_m1_d1_o   <= '0;
     end
     else begin
       rf_dst_d1_o             <= uop_ctl_m0_d0.decoded_rd;
@@ -125,15 +138,18 @@ module N2_idu_decode #(
           uop_ctl_m1_v_d1     <= 1'b1;
           uop_ctl_m1_d1_o     <= uop_ctl_m1_d0;
           count_instr[31:0]   <= count_instr + 2;
-          count_instr[63:32]  <= (count_instr[31:0]== 32'hffff_fffe)? (count_instr[63:32] + 1): count_instr[63:32];
+          count_instr[63:32]  <= &count_instr[31:1]? (count_instr[63:32] + 1): count_instr[63:32];
           iq_rd_ptr           <= iq_rd_ptr + 3'd2;
           if (uop_ctl_m1_d0.instr_jal) begin
             branch_pc_d1_o    <= btb_ctl_m1_d0.pc + uop_ctl_m1_d0.decoded_imm_j;
             //* update sbp
-            sbp_upd_v_d1_o    <= 1'b1;
-            sbp_upd_d1_o.pc   <= btb_ctl_m1_d0.pc;
-            sbp_upd_d1_o.tgt  <= btb_ctl_m1_d0.pc + uop_ctl_m1_d0.decoded_imm_j;
-            is_branch_d1_o[1] <= ~btb_ctl_m1_d0.sbp_hit;
+            btb_upd_v_d1_o    <= ~btb_ctl_m1_d0.jump | 
+                                ((btb_ctl_m1_d0.pc + uop_ctl_m1_d0.decoded_imm_j)!=btb_ctl_m1_d0.tgt);
+            btb_upd_d1_o.valid<= 1;
+            btb_upd_d1_o.pc   <= btb_ctl_m1_d0.pc;
+            btb_upd_d1_o.tgt  <= btb_ctl_m1_d0.pc + uop_ctl_m1_d0.decoded_imm_j;
+            is_branch_d1_o[1] <= ~btb_ctl_m1_d0.jump | 
+                                ((btb_ctl_m1_d0.pc + uop_ctl_m1_d0.decoded_imm_j)!=btb_ctl_m1_d0.tgt);;
           end
         end
 
@@ -150,10 +166,13 @@ module N2_idu_decode #(
         else if (uop_ctl_m0_d0.instr_jal) begin
           branch_pc_d1_o      <= btb_ctl_m0_d0.pc + uop_ctl_m0_d0.decoded_imm_j;
           //* update sbp
-          sbp_upd_v_d1_o      <= 1'b1;
-          sbp_upd_d1_o.pc     <= btb_ctl_m0_d0.pc;
-          sbp_upd_d1_o.tgt    <= btb_ctl_m0_d0.pc + uop_ctl_m0_d0.decoded_imm_j;
-          is_branch_d1_o[0]   <= ~btb_ctl_m0_d0.sbp_hit;
+          btb_upd_v_d1_o      <= ~btb_ctl_m0_d0.jump| 
+                                ((btb_ctl_m0_d0.pc + uop_ctl_m0_d0.decoded_imm_j)!=btb_ctl_m0_d0.tgt);
+          btb_upd_d1_o.valid  <= 1;
+          btb_upd_d1_o.pc     <= btb_ctl_m0_d0.pc;
+          btb_upd_d1_o.tgt    <= btb_ctl_m0_d0.pc + uop_ctl_m0_d0.decoded_imm_j;
+          is_branch_d1_o[0]   <= ~btb_ctl_m0_d0.jump| 
+                                ((btb_ctl_m0_d0.pc + uop_ctl_m0_d0.decoded_imm_j)!=btb_ctl_m0_d0.tgt);
         end
       end
     end

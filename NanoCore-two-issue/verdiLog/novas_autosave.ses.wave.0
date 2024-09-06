@@ -2,7 +2,7 @@ Magic 271485
 Revision Verdi_O-2018.09-SP2
 
 ; Window Layout <x> <y> <width> <height> <signalwidth> <valuewidth>
-viewPort 0 27 3300 578 268 464
+viewPort 0 27 3300 705 268 464
 
 ; File list:
 ; openDirFile [-d delimiter] [-s time_offset] [-rf auto_bus_rule_file] path_name file_name
@@ -16,20 +16,22 @@ signalSpacing 5
 
 ; windowTimeUnit is used for zoom, cursor & marker
 ; waveform viewport range
-zoom 6729608521.305927 6743522010.398762
-cursor 6737100000.000000
+zoom 3272995149.985314 3286313231.140752
+cursor 3279700000.000000
 marker -232000.000000
 
 ; user define markers
 ; userMarker time_pos marker_name color linestyle
 userMarker 16387900000 flush ID_GREEN5 long_dashed
-userMarker 7297100000 wr ID_GREEN5 long_dashed
-userMarker 8164300000 err ID_GREEN5 long_dashed
+userMarker 6573700000 wr ID_GREEN5 long_dashed
+userMarker 5656700000 err ID_GREEN5 long_dashed
+userMarker 36053300000 1st ID_GREEN5 long_dashed
+userMarker 36995700000 1st_end ID_GREEN5 long_dashed
 
 ; visible top row signal index
 top 0
 ; marker line index
-markerPos 27
+markerPos 13
 
 ; counter signal list
 ; addCounterSig -Rising|-Falling|-AnyChange signal
@@ -41,11 +43,6 @@ addCounterSig -Rising "/Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocor
 ; addCounterSig -Rising|-Falling|-AnyChange signal
 
 addCounterSig -Rising "/Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/is_branch_d2"
-
-; counter signal list
-; addCounterSig -Rising|-Falling|-AnyChange signal
-
-addCounterSig -Rising "/Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_ifu/flush_i"
 
 ; event list
 ; addEvent event_name event_expression
@@ -69,19 +66,31 @@ addGroup "G1"
 activeDirFile "" "/home/lijunnan/Documents/0-code/vcs_prj/pipelined-picorv32/wave.fsdb"
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/clk
 addSignal -h 15 -holdScope resetn
-addSignal -h 15 -holdScope wb_entry_rd_ptr[2:0]
-addSignal -h 15 -holdScope wb_entry_wr_ptr[2:0]
-addSignal -h 15 -holdScope rf_we_lsu
-addSignal -h 15 -holdScope wb_entry[7:0]
-addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_search_instr/r_cached_data[1][7:0]
-addSignal -h 15 -holdScope r_cached_data[0][7:0]
-addSignal -h 15 -holdScope r_tag_valid[1]
-addSignal -h 15 -holdScope r_tag_valid[0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_search_instr/i_cache_rden
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/irq_offset[4:0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/i_irq_bitmap[31:0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/Pkt_Proc_Top/DMA_Engine/DMA_Peri/o_wren_pBufWR
+addSignal -h 15 -holdScope o_din_pBufWR[47:0]
+addSignal -h 15 -holdScope o_wren_pBufRD
+addSignal -h 15 -holdScope o_din_pBufRD[63:0]
+addSignal -h 15 -holdScope o_rden_int
+addSignal -h 15 -holdScope i_dout_int[31:0]
+addSignal -h 15 -holdScope i_empty_int
+addSignal -h 15 /BLANK
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_search_instr/o_miss_rden
+addSignal -h 15 -holdScope o_miss_wren
+addSignal -h 15 -holdScope o_miss_addr[31:0]
+addSignal -h 15 -holdScope o_miss_wdata[7:0]
+addSignal -h 15 -holdScope o_miss_wstrb[7:0]
+addSignal -h 15 -holdScope i_miss_resp
+addSignal -h 15 -holdScope i_upd_valid
+addSignal -h 15 -holdScope i_upd_rdata[7:0]
 addGroup "G2"
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/instr_gnt_i
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_ifu/instr_req_o
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/instr_addr_o[31:0]
 addSignal -h 15 -holdScope instr_rdata_i[31:0]
+addSignal -h 15 -holdScope instr_ready_i[1:0]
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_ifu/reg_next_pc[31:0]
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_idu/N2_idu_decode/flush_i
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/data_ready_i
@@ -89,14 +98,21 @@ addSignal -h 15 -holdScope data_rdata_i[31:0]
 addSignal -h 15 -holdScope data_req_o
 addSignal -h 15 -holdScope data_we_o
 addSignal -h 15 -holdScope data_addr_o[31:0]
-addSignal -h 15 -holdScope data_gnt_i
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_lsu/data_wdata_o[31:0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/data_gnt_i
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/data_req_o
 addSignal -h 15 -holdScope data_we_o
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_idu/N2_idu_decode/iq_not_empty_m0
+addSignal -h 15 -holdScope iq_bypass_m0
+addSignal -h 15 -holdScope iq_wr_ptr[2:0]
+addSignal -h 15 -holdScope iq_rd_ptr[2:0]
+addSignal -h 15 -holdScope iq_prefetch_ptr[2:0]
 addSignal -h 15 /BLANK
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_ifu/flush_i
-addSignal -h 15 -holdScope RisingCounter_flush_i[63:0]
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/wb_entry_rd_ptr[4:0]
 addSignal -h 15 -holdScope wb_entry_wr_ptr[4:0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_idu/pc_m0_d2_o[31:0]
+addSignal -h 15 -holdScope pc_m1_d2_o[31:0]
 addSignal -h 15 /BLANK
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/uid_d2[7:0]
 addSignal -h 15 -holdScope uid_lsu[7:0]
@@ -117,9 +133,7 @@ addSignal -h 15 -holdScope is_branch_ex
 addSignal -h 15 -holdScope is_branch_d2
 addSignal -h 15 -holdScope cnt_clk[31:0]
 addGroup "G5"
-addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_ifu/btb_upd_v_i
-addSignal -h 15 -holdScope btb_upd_info_i
-addSignal -h 15 -holdScope btb_entry[3:0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_ifu/btb_entry[3:0]
 addSignal -h 15 -holdScope btb_entry[3]
 addSignal -h 15 -holdScope btb_entry[2]
 addSignal -h 15 -holdScope btb_entry[1]
@@ -130,7 +144,9 @@ addSignal -h 15 /BLANK
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_idu/N2_idu_decode/rf_dst_idu_i[4:0]
 addSignal -h 15 -holdScope rf_dst_mu_i[4:0]
 addSignal -h 15 -holdScope rf_dst_lsu_i[4:0]
-addSignal -h 15 -holdScope rf_we_mu_i
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/rf_we_ex0
+addSignal -h 15 -holdScope rf_we_ex1
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/u_idu/N2_idu_decode/rf_we_mu_i
 addSignal -h 15 -holdScope rf_we_idu_i
 addSignal -h 15 -holdScope rf_we_lsu_i
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/genblk1/NanoCore_Wrapper/NanoCore/cpuregs[0:31]
@@ -186,7 +202,7 @@ addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/gen_nanocore[0]/ge
 addSignal -h 15 -holdScope data_we_o
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_search_data/i_clk
 addSignal -h 15 -holdScope i_upd_valid
-addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_update_data/i_miss_rden[0:0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_update_data/i_miss_rden
 addGroup "G8"
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/i_data_valid
 addSignal -h 15 -holdScope i_data[133:0]
@@ -196,19 +212,16 @@ addSignal -h 15 -UNSIGNED /Testbench_wrapper/testbench_state[3:0]
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/Pkt_Proc_Top/Pkt_DMUX/o_data_DMA_valid
 addSignal -h 15 -holdScope o_data_DMA[133:0]
 addGroup "G9"
-addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_update_data/o_upd_valid[0:0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_update_data/o_upd_valid
 addSignal -h 15 -holdScope o_upd_rdata[7:0]
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/gen_mem[7]/data_sram/web
 addSignal -h 15 -holdScope addrb[31:0]
 addSignal -h 15 -holdScope doutb[31:0]
 addSignal -h 15 -holdScope dinb[31:0]
 addSignal -h 15 -holdScope rdb
-addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/gen_mem[7]/data_sram/mem/memory[6825][31:0]
 addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_update_data/i_clk
-addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/gen_mem[7]/data_sram/mem/wren_b
 addGroup "G10"
-addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_search_data/r_to_wb[1:0]
-addSignal -h 15 -holdScope r_cached_data[1:0]
+addSignal -h 15 /Testbench_wrapper/NanoCore_SoC/MultiCore_Top/Memory_Top/Cache_Top/cache_search_data/r_cached_data[1:0]
 addSignal -h 15 -holdScope r_cached_data[1][7:0]
 addSignal -h 15 -holdScope r_cached_data[0][7:0]
 addSignal -h 15 -holdScope r_tag_addr[1:0]

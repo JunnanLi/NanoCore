@@ -33,6 +33,7 @@
   //* Using Xilinx's FIFO/SRAM IP cores
   // `define XILINX_FIFO_RAM
   `define SIM_FIFO_RAM
+  `define DATA_SRAM_noBUFFER
   //=========================//
   //* Frequency
     `define NS_PER_CLK      8'd8  //* 125MHz
