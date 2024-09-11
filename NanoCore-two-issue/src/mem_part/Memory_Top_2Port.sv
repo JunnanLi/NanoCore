@@ -9,6 +9,7 @@ module Memory_Top (
   //* clk & reset;
   input   wire                    i_clk,
   input   wire                    i_rst_n,
+  input   wire                    i_flush,
 
   //* interface for configuration;
   input   wire                    i_conf_rden,    //* support read/write
@@ -24,7 +25,6 @@ module Memory_Top (
   input   wire  [          31:0]  i_data_addr  ,
   input   wire  [           3:0]  i_data_wstrb ,
   input   wire  [          31:0]  i_data_wdata ,
-  output  wire                    o_data_valid_ns,
   output  wire                    o_data_valid ,
   output  wire  [          31:0]  o_data_rdata ,
   output  wire                    o_instr_gnt  ,
@@ -57,6 +57,7 @@ module Memory_Top (
   wire                          w_mm_wren_data;
   wire  [             31:0]     w_mm_addr_instr, w_mm_addr_data;
   wire  [ 7:0][       31:0]     w_mm_wdata_data;
+  wire  [ 7:0][        3:0]     w_mm_wstrb_data;
   wire  [ 7:0][       31:0]     w_mm_rdata_instr, w_mm_rdata_data;
   wire                          w_mm_rvalid_instr, w_mm_rvalid_data;
   reg   [ 7:0]                  temp_winc;
@@ -120,6 +121,7 @@ module Memory_Top (
     //* clk & reset;
     .i_clk            (i_clk                      ),
     .i_rst_n          (i_rst_n                    ),
+    .i_flush          (i_flush                    ),
 
     //* interface for PEs    
     .o_data_gnt       (o_data_gnt                 ),
@@ -128,7 +130,6 @@ module Memory_Top (
     .i_data_addr      (i_data_addr                ),
     .i_data_wstrb     (i_data_wstrb               ),
     .i_data_wdata     (i_data_wdata               ),
-    .o_data_valid_ns  (o_data_valid_ns            ),
     .o_data_valid     (o_data_valid               ),
     .o_data_rdata     (o_data_rdata               ),
     .o_instr_gnt      (o_instr_gnt                ),
@@ -149,6 +150,7 @@ module Memory_Top (
     .o_mm_wren_data   (w_mm_wren_data             ),
     .o_mm_addr_data   (w_mm_addr_data             ),
     .o_mm_wdata_data  (w_mm_wdata_data            ),
+    .o_mm_wstrb_data  (w_mm_wstrb_data            ),
     .i_mm_rdata_data  (w_mm_rdata_data            ),
     .i_mm_rvalid_data (w_mm_rvalid_data           ),
     .i_mm_gnt_data    (1'b1                       )
@@ -156,8 +158,12 @@ module Memory_Top (
 
   reg [1:0] temp_imm_rden_instr, temp_imm_rden_data, temp_dma_rden;
   assign w_mm_rvalid_instr  = temp_imm_rden_instr[1];
-  assign w_mm_rvalid_data  = temp_imm_rden_data[1];
+  assign w_mm_rvalid_data   = temp_imm_rden_data[1];
+`ifdef DATA_SRAM_noBUFFER
+  assign o_dma_rvalid = temp_dma_rden[0];
+`else
   assign o_dma_rvalid = temp_dma_rden[1];
+`endif
   always @(posedge i_clk or negedge i_rst_n) begin
     if(~i_rst_n) begin
       temp_imm_rden_instr <= 2'b0;
@@ -178,33 +184,40 @@ module Memory_Top (
   genvar i_ram;
   generate
     for (i_ram = 0; i_ram < 8; i_ram = i_ram+1) begin: gen_mem
-      SRAM_Wrapper instr_sram(
+      SRAM_Wrapper_instr instr_sram(
         .clk    (i_clk                          ),
         .rst_n  (i_rst_n                        ),
         .rda    (w_conf_rden_instr[i_ram]       ),
         .wea    (w_conf_wren_instr[i_ram]       ),  
         .addra  (w_conf_addr_instr[i_ram]       ),
         .dina   (w_conf_wdata_instr[i_ram]      ),
+        .stra   (4'hf                           ),
         .douta  (w_conf_rdata_instr[i_ram]      ),
         .rdb    (w_mm_rden_instr                ),
         .web    ('0                             ),  
         .addrb  (w_mm_addr_instr                ),
         .dinb   ('0                             ),
+        .strb   ('0                             ),
         .doutb  (w_mm_rdata_instr[i_ram]        )
       );
-
+    `ifdef DATA_SRAM_noBUFFER
+      SRAM_Wrapper_instr data_sram(
+    `else
       SRAM_Wrapper data_sram(
+    `endif
         .clk    (i_clk                          ),
         .rst_n  (i_rst_n                        ),
         .rda    (w_conf_dma_rden[i_ram]         ),
         .wea    (w_conf_dma_wren[i_ram]         ),  
         .addra  (w_conf_dma_addr[i_ram]         ),
         .dina   (w_conf_dma_wdata[i_ram]        ),
+        .stra   (4'hf                           ),
         .douta  (w_conf_dma_rdata[i_ram]        ),
         .rdb    (w_mm_rden_data                 ),
         .web    (w_mm_wren_data                 ),  
         .addrb  (w_mm_addr_data                 ),
         .dinb   (w_mm_wdata_data[i_ram]         ),
+        .strb   (w_mm_wstrb_data[i_ram]         ),
         .doutb  (w_mm_rdata_data[i_ram]         )
       );
     end

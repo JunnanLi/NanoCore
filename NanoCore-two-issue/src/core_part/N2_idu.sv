@@ -7,12 +7,9 @@
 import NanoCore_pkg::*;
 
 module N2_idu #(
-  parameter [ 0:0] CATCH_MISALIGN = 1,
   parameter [ 0:0] CATCH_ILLINSN = 1,
   parameter [31:0] PROGADDR_RESET = 32'b0,
-  parameter [31:0] PROGADDR_IRQ = 32'b0,
-  parameter [ 0:0] TWO_CYCLE_ALU = 0,
-  parameter [ 0:0] TWO_CYCLE_COMPARE = 0
+  parameter [31:0] PROGADDR_IRQ = 32'b0
 ) (
   input                 clk, resetn,
 
@@ -22,14 +19,14 @@ module N2_idu #(
   input   wire  [31:0]  cpuregs_rs2_m1,
   output  reg           rf_we_d2_o,
   output  reg   [regindex_bits-1:0] rf_dst_d2_o,
-  output  wire  [31:0]  alu_op1_2ex0_d2_o,
-  output  wire  [31:0]  alu_op2_2ex0_d2_o,
-  output  wire  [31:0]  alu_op1_2ex1_d2_o,
-  output  wire  [31:0]  alu_op2_2ex1_d2_o,
-  output  wire  [31:0]  alu_op1_2mu_d2_o,
-  output  wire  [31:0]  alu_op2_2mu_d2_o,
-  output  wire  [31:0]  alu_op1_2lsu_d2_o,
-  output  wire  [31:0]  alu_op2_2lsu_d2_o,
+  output  logic [31:0]  alu_op1_2ex0_d2_o,
+  output  logic [31:0]  alu_op2_2ex0_d2_o,
+  output  logic [31:0]  alu_op1_2ex1_d2_o,
+  output  logic [31:0]  alu_op2_2ex1_d2_o,
+  output  logic [31:0]  alu_op1_2mu_d2_o,
+  output  logic [31:0]  alu_op2_2mu_d2_o,
+  output  logic [31:0]  alu_op1_2lsu_d2_o,
+  output  logic [31:0]  alu_op2_2lsu_d2_o,
   output  reg   [31:0]  alu_rst_d2_o,   //* merged (instr0/1)
   input   wire          is_branch_ex_i,
   output  reg           is_branch_d2_o,
@@ -101,9 +98,12 @@ module N2_idu #(
   input   wire          btb_ctl_m1_v_i,
   input   btb_ctl_t     btb_ctl_m1_i,
   output  btb_ctl_t     btb_ctl_d2_o,
-  output  wire          sbp_upd_v_d1_o,
-  output  sbp_update_t  sbp_upd_d1_o,
+  output  wire          btb_upd_v_d1_o,
+  output  btb_t         btb_upd_d1_o,
 `endif
+  input   wire  [31:0]  alu_rst_ex0_i,
+  input   wire  [31:0]  alu_rst_ex1_i,
+  input   wire  [31:0]  alu_rst_lsu_i,
 
   output  wire  [63:0]  count_instr_o,
   output  wire  [63:0]  count_cycle_o
@@ -117,19 +117,94 @@ module N2_idu #(
     end
   `endif
 
-
   reg   [31:0]  alu_op1_m0_d2, alu_op2_m0_d2,
                 alu_op1_m1_d2, alu_op2_m1_d2;
-  reg           ex_sel, mu_sel, lsu_sel;
+  reg           ex_sel, mu_sel, lsu_sel;  //* select m0/m1;
+  wire  [1:0][2:0] alu_op_bypass_m0_d2, alu_op_bypass_m1_d2;
   //* alu_op
-  assign alu_op1_2ex0_d2_o  = alu_op1_m0_d2;
-  assign alu_op2_2ex0_d2_o  = alu_op2_m0_d2;
-  assign alu_op1_2ex1_d2_o  = alu_op1_m1_d2;
-  assign alu_op2_2ex1_d2_o  = alu_op2_m1_d2;
-  assign alu_op1_2mu_d2_o   = mu_sel?  alu_op1_m1_d2 : alu_op1_m0_d2;
-  assign alu_op2_2mu_d2_o   = mu_sel?  alu_op2_m1_d2 : alu_op2_m0_d2;
-  assign alu_op1_2lsu_d2_o  = lsu_sel? alu_op1_m1_d2 : alu_op1_m0_d2;
-  assign alu_op2_2lsu_d2_o  = lsu_sel? alu_op2_m1_d2 : alu_op2_m0_d2;
+  // assign alu_op1_2ex0_d2_o  = alu_op1_m0_d2;
+  // assign alu_op2_2ex0_d2_o  = alu_op2_m0_d2;
+  // assign alu_op1_2ex1_d2_o  = alu_op1_m1_d2;
+  // assign alu_op2_2ex1_d2_o  = alu_op2_m1_d2;
+  // assign alu_op1_2mu_d2_o   = mu_sel?  alu_op1_m1_d2 : alu_op1_m0_d2;
+  // assign alu_op2_2mu_d2_o   = mu_sel?  alu_op2_m1_d2 : alu_op2_m0_d2;
+  // assign alu_op1_2lsu_d2_o  = lsu_sel? alu_op1_m1_d2 : alu_op1_m0_d2;
+  // assign alu_op2_2lsu_d2_o  = lsu_sel? alu_op2_m1_d2 : alu_op2_m0_d2;
+always_comb begin
+  //* ex0
+  (* parallel_case *)
+  case(1'b1)
+    alu_op_bypass_m0_d2[0][0]: alu_op1_2ex0_d2_o = alu_rst_ex0_i;
+    alu_op_bypass_m0_d2[0][1]: alu_op1_2ex0_d2_o = alu_rst_ex1_i;
+    alu_op_bypass_m0_d2[0][2]: alu_op1_2ex0_d2_o = alu_rst_lsu_i;
+    default:                   alu_op1_2ex0_d2_o = alu_op1_m0_d2;
+  endcase
+  (* parallel_case *)
+  case(1'b1)
+    alu_op_bypass_m0_d2[1][0]: alu_op2_2ex0_d2_o = alu_rst_ex0_i;
+    alu_op_bypass_m0_d2[1][1]: alu_op2_2ex0_d2_o = alu_rst_ex1_i;
+    alu_op_bypass_m0_d2[1][2]: alu_op2_2ex0_d2_o = alu_rst_lsu_i;
+    default:                   alu_op2_2ex0_d2_o = alu_op2_m0_d2;
+  endcase
+  //* ex1
+  (* parallel_case *)
+  case(1'b1)
+    alu_op_bypass_m1_d2[0][0]: alu_op1_2ex1_d2_o = alu_rst_ex0_i;
+    alu_op_bypass_m1_d2[0][1]: alu_op1_2ex1_d2_o = alu_rst_ex1_i;
+    alu_op_bypass_m1_d2[0][2]: alu_op1_2ex1_d2_o = alu_rst_lsu_i;
+    default:                   alu_op1_2ex1_d2_o = alu_op1_m1_d2;
+  endcase
+  (* parallel_case *)
+  case(1'b1)
+    alu_op_bypass_m1_d2[1][0]: alu_op2_2ex1_d2_o = alu_rst_ex0_i;
+    alu_op_bypass_m1_d2[1][1]: alu_op2_2ex1_d2_o = alu_rst_ex1_i;
+    alu_op_bypass_m1_d2[1][2]: alu_op2_2ex1_d2_o = alu_rst_lsu_i;
+    default:                   alu_op2_2ex1_d2_o = alu_op2_m1_d2;
+  endcase
+  //* mu
+  (* parallel_case *)
+  case(1'b1)
+    ~mu_sel & alu_op_bypass_m0_d2[0][0]: alu_op1_2mu_d2_o = alu_rst_ex0_i;
+    ~mu_sel & alu_op_bypass_m0_d2[0][1]: alu_op1_2mu_d2_o = alu_rst_ex1_i;
+    ~mu_sel & alu_op_bypass_m0_d2[0][2]: alu_op1_2mu_d2_o = alu_rst_lsu_i;
+     mu_sel & alu_op_bypass_m1_d2[0][0]: alu_op1_2mu_d2_o = alu_rst_ex0_i;
+     mu_sel & alu_op_bypass_m1_d2[0][1]: alu_op1_2mu_d2_o = alu_rst_ex1_i;
+     mu_sel & alu_op_bypass_m1_d2[0][2]: alu_op1_2mu_d2_o = alu_rst_lsu_i;
+    default:  alu_op1_2mu_d2_o = mu_sel?  alu_op1_m1_d2 : alu_op1_m0_d2;
+  endcase
+  (* parallel_case *)
+  case(1'b1)
+    ~mu_sel & alu_op_bypass_m0_d2[1][0]: alu_op2_2mu_d2_o = alu_rst_ex0_i;
+    ~mu_sel & alu_op_bypass_m0_d2[1][1]: alu_op2_2mu_d2_o = alu_rst_ex1_i;
+    ~mu_sel & alu_op_bypass_m0_d2[1][2]: alu_op2_2mu_d2_o = alu_rst_lsu_i;
+     mu_sel & alu_op_bypass_m1_d2[1][0]: alu_op2_2mu_d2_o = alu_rst_ex0_i;
+     mu_sel & alu_op_bypass_m1_d2[1][1]: alu_op2_2mu_d2_o = alu_rst_ex1_i;
+     mu_sel & alu_op_bypass_m1_d2[1][2]: alu_op2_2mu_d2_o = alu_rst_lsu_i;
+    default:  alu_op2_2mu_d2_o = mu_sel?  alu_op2_m1_d2 : alu_op2_m0_d2;
+  endcase
+  //* lsu
+  (* parallel_case *)
+  case(1'b1)
+    ~lsu_sel & alu_op_bypass_m0_d2[0][0]: alu_op1_2lsu_d2_o = alu_rst_ex0_i;
+    ~lsu_sel & alu_op_bypass_m0_d2[0][1]: alu_op1_2lsu_d2_o = alu_rst_ex1_i;
+    ~lsu_sel & alu_op_bypass_m0_d2[0][2]: alu_op1_2lsu_d2_o = alu_rst_lsu_i;
+     lsu_sel & alu_op_bypass_m1_d2[0][0]: alu_op1_2lsu_d2_o = alu_rst_ex0_i;
+     lsu_sel & alu_op_bypass_m1_d2[0][1]: alu_op1_2lsu_d2_o = alu_rst_ex1_i;
+     lsu_sel & alu_op_bypass_m1_d2[0][2]: alu_op1_2lsu_d2_o = alu_rst_lsu_i;
+    default:  alu_op1_2lsu_d2_o = lsu_sel?  alu_op1_m1_d2 : alu_op1_m0_d2;
+  endcase
+  (* parallel_case *)
+  case(1'b1)
+    ~lsu_sel & alu_op_bypass_m0_d2[1][0]: alu_op2_2lsu_d2_o = alu_rst_ex0_i;
+    ~lsu_sel & alu_op_bypass_m0_d2[1][1]: alu_op2_2lsu_d2_o = alu_rst_ex1_i;
+    ~lsu_sel & alu_op_bypass_m0_d2[1][2]: alu_op2_2lsu_d2_o = alu_rst_lsu_i;
+     lsu_sel & alu_op_bypass_m1_d2[1][0]: alu_op2_2lsu_d2_o = alu_rst_ex0_i;
+     lsu_sel & alu_op_bypass_m1_d2[1][1]: alu_op2_2lsu_d2_o = alu_rst_ex1_i;
+     lsu_sel & alu_op_bypass_m1_d2[1][2]: alu_op2_2lsu_d2_o = alu_rst_lsu_i;
+    default:  alu_op2_2lsu_d2_o = lsu_sel?  alu_op2_m1_d2 : alu_op2_m0_d2;
+  endcase
+end
+
   //* uop_ctl
   assign uop_ctl_2ex0_d2_o  = uop_ctl_m0_d2_o;
   assign uop_ctl_2ex1_d2_o  = uop_ctl_m1_d2_o;
@@ -151,8 +226,8 @@ module N2_idu #(
   assign to_mu_v_o = ~is_branch_ex_i & to_mu_v;
   reg is_branch_ex_delay;
   //* irq
-  reg irq_ack_d2;
   wire irq_ack_d1;
+  reg  irq_ack_d2;
   assign irq_ack_o = ~is_branch_ex_i & ~is_branch_ex_delay & irq_ack_d2;
 
   reg           irq_processing, irq_processing_delay1;
@@ -235,7 +310,7 @@ module N2_idu #(
         uop_ctl_m0_d1_o.instr_retirq: begin
           is_branch_d2_o    <= 'b1;
           `debug($display("LD_RS1: %2d 0x%08x", uop_ctl_m0_d1_o.decoded_rs1, cpuregs_rs1_m0);)
-          branch_pc_d2_o    <= CATCH_MISALIGN ? (irq_retPC & 32'h fffffffe) : irq_retPC;
+          branch_pc_d2_o    <= irq_retPC;
           irq_processing    <= 1'b0;
         end
         uop_ctl_m0_d1_o.instr_maskirq: begin
@@ -290,7 +365,7 @@ module N2_idu #(
           uop_ctl_m1_d1_o.instr_retirq: begin
             is_branch_d2_o    <= 'b1;
             `debug($display("LD_RS1: %2d 0x%08x", uop_ctl_m1_d1_o.decoded_rs1, cpuregs_rs1_m1);)
-            branch_pc_d2_o    <= CATCH_MISALIGN ? (irq_retPC & 32'h fffffffe) : irq_retPC;
+            branch_pc_d2_o    <= irq_retPC;
             irq_processing    <= 1'b0;
           end
           uop_ctl_m1_d1_o.instr_maskirq: begin
@@ -400,6 +475,8 @@ module N2_idu #(
     .uop_ctl_m1_d1_o  (uop_ctl_m1_d1_o  ),
     .alu_op_bypass_m0_d1_o(alu_op_bypass_m0_d1_o),
     .alu_op_bypass_m1_d1_o(alu_op_bypass_m1_d1_o),
+    .alu_op_bypass_m0_d2_o(alu_op_bypass_m0_d2  ),
+    .alu_op_bypass_m1_d2_o(alu_op_bypass_m1_d2  ),
     .flush_i          (flush            ),
     .is_branch_d2_i   (is_branch_d2_o   ),
     .is_branch_ex_i   (is_branch_ex_i   ),
@@ -441,8 +518,8 @@ module N2_idu #(
     .btb_ctl_m1_i     (btb_ctl_m1_i     ),
     .btb_ctl_m0_d1_o  (btb_ctl_m0_d1    ),
     .btb_ctl_m1_d1_o  (btb_ctl_m1_d1    ),
-    .sbp_upd_v_d1_o   (sbp_upd_v_d1_o   ),
-    .sbp_upd_d1_o     (sbp_upd_d1_o     ),
+    .btb_upd_v_d1_o   (btb_upd_v_d1_o   ),
+    .btb_upd_d1_o     (btb_upd_d1_o     ),
   `endif
 
     .count_cycle      (count_cycle_o    ),

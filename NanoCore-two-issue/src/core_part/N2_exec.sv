@@ -6,10 +6,7 @@
 /*************************************************************/
 import NanoCore_pkg::*;
 
-module N2_exec #(
-  parameter [ 0:0] TWO_CYCLE_ALU = 0,
-  parameter [ 0:0] TWO_CYCLE_COMPARE = 0
-) (
+module N2_exec (
   input clk, resetn,
   input                 to_ex_v_i,
   input   wire  [7:0]   uid_d2_i,
@@ -27,7 +24,7 @@ module N2_exec #(
   
 `ifdef ENABLE_BP
   output  reg           btb_upd_v_o,
-  output  btb_update_t  btb_upd_info_o,
+  output  btb_t         btb_upd_info_o,
   input   btb_ctl_t     btb_ctl_i,
 `endif
 
@@ -68,25 +65,14 @@ module N2_exec #(
   reg [31:0] alu_shl, alu_shr;
   reg alu_eq, alu_ltu, alu_lts;
 
-  generate if (TWO_CYCLE_ALU) begin
-    always_ff @(posedge clk) begin
-      alu_add_sub <= instr_sub ? alu_op1_i - alu_op2_i : alu_op1_i + alu_op2_i;
-      alu_eq <= alu_op1_i == alu_op2_i;
-      alu_lts <= $signed(alu_op1_i) < $signed(alu_op2_i);
-      alu_ltu <= alu_op1_i < alu_op2_i;
-      alu_shl <= alu_op1_i << alu_op2_i[4:0];
-      alu_shr <= $signed({instr_sra || instr_srai ? alu_op1_i[31] : 1'b0, alu_op1_i}) >>> alu_op2_i[4:0];
-    end
-  end else begin
-    always_comb begin
-      alu_add_sub = instr_sub ? alu_op1_i - alu_op2_i : alu_op1_i + alu_op2_i;
-      alu_eq = alu_op1_i == alu_op2_i;
-      alu_lts = $signed(alu_op1_i) < $signed(alu_op2_i);
-      alu_ltu = alu_op1_i < alu_op2_i;
-      alu_shl = alu_op1_i << alu_op2_i[4:0];
-      alu_shr = $signed({instr_sra || instr_srai ? alu_op1_i[31] : 1'b0, alu_op1_i}) >>> alu_op2_i[4:0];
-    end
-  end endgenerate
+  always_comb begin
+    alu_add_sub = instr_sub ? alu_op1_i - alu_op2_i : alu_op1_i + alu_op2_i;
+    alu_eq = alu_op1_i == alu_op2_i;
+    alu_lts = $signed(alu_op1_i) < $signed(alu_op2_i);
+    alu_ltu = alu_op1_i < alu_op2_i;
+    alu_shl = alu_op1_i << alu_op2_i[4:0];
+    alu_shr = $signed({instr_sra || instr_srai ? alu_op1_i[31] : 1'b0, alu_op1_i}) >>> alu_op2_i[4:0];
+  end
 
   always_comb begin
     alu_out_0 = 'bx;
@@ -100,9 +86,9 @@ module N2_exec #(
         alu_out_0 = !alu_lts;
       instr_bgeu:
         alu_out_0 = !alu_ltu;
-      is_slti_blt_slt && (!TWO_CYCLE_COMPARE || !{instr_beq,instr_bne,instr_bge,instr_bgeu}):
+      is_slti_blt_slt:
         alu_out_0 = alu_lts;
-      is_sltiu_bltu_sltu && (!TWO_CYCLE_COMPARE || !{instr_beq,instr_bne,instr_bge,instr_bgeu}):
+      is_sltiu_bltu_sltu:
         alu_out_0 = alu_ltu;
     endcase
 
@@ -144,23 +130,34 @@ module N2_exec #(
       if (is_beq_bne_blt_bge_bltu_bgeu) begin
         rf_dst_ex_o     <= 0;
         `ifdef ENABLE_BP
-          is_branch_ex_o  <= alu_out_0 ^ (btb_ctl_i.hit & btb_ctl_i.jump);
+          is_branch_ex_o  <= alu_out_0 ^ btb_ctl_i.jump;
           branch_pc_ex_o  <= alu_out_0? (cur_pc_d2_i + decoded_imm): (cur_pc_d2_i + 4);
         `else
-          is_branch_ex_o  <= TWO_CYCLE_COMPARE ? alu_out_0_q : alu_out_0;
+          is_branch_ex_o  <= alu_out_0;
         `endif
-      end else begin
+      end 
+      else if(instr_jalr) begin
+        is_branch_ex_o  <= ~btb_ctl_i.jump | (alu_out != btb_ctl_i.tgt);
+        branch_pc_ex_o  <= alu_out;
+        rf_we_ex_o      <= btb_ctl_i.jump & (alu_out == btb_ctl_i.tgt);
+        alu_rst_ex_o    <= cur_pc_d2_i + 4;
+      end
+      else begin
         alu_rst_ex_o    <= alu_out;
         branch_pc_ex_o  <= alu_out;
-        is_branch_ex_o  <= instr_jalr;
-        rf_we_ex_o      <= ~instr_jalr;
+        is_branch_ex_o  <= 0;
+        rf_we_ex_o      <= 1;
+        // is_branch_ex_o  <= instr_jalr;
+        // rf_we_ex_o      <= ~instr_jalr;
       end
     end
   end
 
   `ifdef ENABLE_BP
+    wire  [15:0]  w_temp_tgt = cur_pc_d2_i + decoded_imm;
     always_ff@(posedge clk or negedge resetn) begin
       btb_upd_v_o                     <= 1'b0;
+      btb_upd_info_o.is_jarl          <= 0;
       if(!resetn) begin
         btb_upd_v_o     <= '0;
       end
@@ -168,25 +165,25 @@ module N2_exec #(
         if (is_beq_bne_blt_bge_bltu_bgeu) begin
           //* jump;
           if(alu_out_0) begin
-            btb_upd_v_o               <= 1'b1;
-            btb_upd_info_o.insert_btb <= ~btb_ctl_i.hit;
-            btb_upd_info_o.update_bht <= btb_ctl_i.hit;
-            btb_upd_info_o.inc_bht    <= 1;
-            btb_upd_info_o.update_tgt <= 0;
+            btb_upd_v_o               <= ~btb_ctl_i.jump | (w_temp_tgt != btb_ctl_i.tgt);
+            btb_upd_info_o.valid      <= 1;
             btb_upd_info_o.pc         <= btb_ctl_i.pc;
-            btb_upd_info_o.tgt        <= cur_pc_d2_i + decoded_imm;
-            btb_upd_info_o.entryID    <= btb_ctl_i.entryID;
+            btb_upd_info_o.tgt        <= w_temp_tgt;
           end
           //* donot jump
           else begin
-            btb_upd_v_o               <= btb_ctl_i.hit & btb_ctl_i.jump;
-            btb_upd_info_o.insert_btb <= ~btb_ctl_i.hit;
-            btb_upd_info_o.update_bht <= 1;
-            btb_upd_info_o.inc_bht    <= 0;
-            btb_upd_info_o.update_tgt <= 0;
-            btb_upd_info_o.tgt        <= cur_pc_d2_i + decoded_imm;
-            btb_upd_info_o.entryID    <= btb_ctl_i.entryID;
+            btb_upd_v_o               <= btb_ctl_i.jump;
+            btb_upd_info_o.pc         <= btb_ctl_i.pc;
+            btb_upd_info_o.valid      <= 0;
+            btb_upd_info_o.tgt        <= 0;
           end
+        end
+        else if(instr_jalr) begin
+          btb_upd_v_o                 <= ~btb_ctl_i.jump | (alu_out != btb_ctl_i.tgt);
+          btb_upd_info_o.is_jarl      <= 1;
+          btb_upd_info_o.valid        <= 1;
+          btb_upd_info_o.pc           <= btb_ctl_i.pc;
+          btb_upd_info_o.tgt          <= alu_out;
         end 
       end
     end

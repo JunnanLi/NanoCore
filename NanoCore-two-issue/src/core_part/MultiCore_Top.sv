@@ -91,7 +91,7 @@ module MultiCore_Top(
   wire  [`NUM_PE-1:0][31:0] w_data_addr;
   wire  [`NUM_PE-1:0][ 3:0] w_data_wstrb;
   wire  [`NUM_PE-1:0][31:0] w_data_wdata;
-  wire  [`NUM_PE-1:0]       w_data_valid, w_data_valid_ns;
+  wire  [`NUM_PE-1:0]       w_data_valid;
   wire  [`NUM_PE-1:0][31:0] w_data_rdata;
   wire  [`NUM_PE-1:0]       w_instr_req;
   wire  [`NUM_PE-1:0][ 1:0] w_instr_req_2b;
@@ -99,6 +99,7 @@ module MultiCore_Top(
   wire  [`NUM_PE-1:0][31:0] w_instr_addr;
   wire  [`NUM_PE-1:0][ 1:0] w_instr_valid;
   wire  [`NUM_PE-1:0][63:0] w_instr_rdata;
+  wire  [`NUM_PE-1:0]       w_flush;
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
 
   //====================================================================//
@@ -115,6 +116,8 @@ module MultiCore_Top(
           //* clk & rst_n;
           .i_clk              (i_clk                        ),
           .i_rst_n            (i_rst_n&~i_conf_en[i_pe]     ),
+          .i_rst_soc_n        (i_rst_n                      ),
+          .flush_o            (w_flush[i_pe]                ),
           //* mem access interface;
           .data_gnt_i         (w_data_gnt[i_pe]             ),
           .data_req_o         (w_data_req[i_pe]             ),
@@ -122,7 +125,7 @@ module MultiCore_Top(
           .data_addr_o        (w_data_addr[i_pe]            ),
           .data_wstrb_o       (w_data_wstrb[i_pe]           ),
           .data_wdata_o       (w_data_wdata[i_pe]           ),
-          .data_valid_ns_i    (w_data_valid_ns[i_pe]        ),
+          .data_valid_ns_i    ('0        ),
           .data_valid_i       (w_data_valid[i_pe]           ),
           .data_rdata_i       (w_data_rdata[i_pe]           ),
           .instr_gnt_i        (w_instr_gnt[i_pe]            ),
@@ -167,6 +170,8 @@ module MultiCore_Top(
           //* clk & rst_n;
           .i_clk              (i_clk                        ),
           .i_rst_n            (i_rst_n&~i_conf_en[i_pe]     ),
+          .i_rst_soc_n        (i_rst_n                      ),
+          .flush_o            (w_flush[i_pe]                ),
           //* mem access interface;
           .data_gnt_i         (w_data_gnt[i_pe]             ),
           .data_req_o         (w_data_req[i_pe]             ),
@@ -174,7 +179,7 @@ module MultiCore_Top(
           .data_addr_o        (w_data_addr[i_pe]            ),
           .data_wstrb_o       (w_data_wstrb[i_pe]           ),
           .data_wdata_o       (w_data_wdata[i_pe]           ),
-          .data_valid_ns_i    (w_data_valid_ns[i_pe]        ),
+          .data_valid_ns_i    ('0        ),
           .data_valid_i       (w_data_valid[i_pe]           ),
           .data_rdata_i       (w_data_rdata[i_pe]           ),
           .instr_gnt_i        (w_instr_gnt[i_pe]            ),
@@ -218,6 +223,7 @@ module MultiCore_Top(
     //* clk & rst_n;
     .i_clk                  (i_clk                        ),
     .i_rst_n                (i_rst_n                      ),
+    .i_flush                (w_flush                      ),
     //* config interface;
     .i_conf_rden            (i_conf_rden                  ),
     .i_conf_wren            (i_conf_wren                  ),
@@ -232,7 +238,6 @@ module MultiCore_Top(
     .i_data_addr            (w_data_addr                  ),
     .i_data_wstrb           (w_data_wstrb                 ),
     .i_data_wdata           (w_data_wdata                 ),
-    .o_data_valid_ns        (w_data_valid_ns              ),
     .o_data_valid           (w_data_valid                 ),
     .o_data_rdata           (w_data_rdata                 ),
     .o_instr_gnt            (w_instr_gnt                  ),

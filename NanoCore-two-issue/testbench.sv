@@ -10,7 +10,7 @@
  */
 
 
-//`define SIM_PKT_IO
+ `define SIM_PKT_IO
 
 `ifndef SIM_PKT_IO
   `define GEN_A_PKT
@@ -107,7 +107,7 @@ localparam  GEN_FAKE_TIME_IRQ = 0;
   initial begin
   `ifndef SIM_PKT_IO
     #400000 $finish;
-    //#7509665 $finish;
+    //#3000000 $finish;
   `endif
   end
   
@@ -254,7 +254,8 @@ localparam  GEN_FAKE_TIME_IRQ = 0;
 `endif
 
   typedef enum logic [3:0] {idle, config_sram, start_core, gen_a_pkt, send_arp, tail, wait_pkt_out,
-                            read_sim_pkt, read_pkt_head, wait_pkt_tail, wait_x_clk} state_t;
+                            read_sim_pkt, read_pkt_head, wait_pkt_tail, wait_x_clk,
+                            gen_2_pkt, gen_3_pkt} state_t;
   state_t testbench_state;
 
   reg [15:0]  mem_idx;
@@ -344,16 +345,50 @@ localparam  GEN_FAKE_TIME_IRQ = 0;
             // 3'd1: r_pktIn   <= {2'b01, 4'hf, 48'h000a_3500_0102, 48'h00e0_4d6d_a7b3, 16'h0806, 16'h1};
             // 3'd2: r_pktIn   <= {2'b00, 4'hf, 128'h0800_0604_0002_00e0_4d6d_a7b3_c0a8_010a};
             // 3'd3: r_pktIn   <= {2'b00, 4'hf, 128'h000a_3500_0102_c0a8_0164_0000_0000_0000};
-            3'd1: r_pktIn   <= {2'b01, 4'hf, 48'hffff_ffff_ffff, 48'h00e0_4d6d_a7b3, 16'h0806, 16'h1};
-            3'd2: r_pktIn   <= {2'b00, 4'hf, 128'h0800_0604_0001_00e0_4d6d_a7b3_c0a8_0114};
+            3'd1: r_pktIn   <= {2'b01, 4'hf, 48'hffff_ffff_ffff, 48'h0442_1aa8_239f, 16'h0806, 16'h1};
+            3'd2: r_pktIn   <= {2'b00, 4'hf, 128'h0800_0604_0001_0442_1aa8_239f_c0a8_0114};
             3'd3: r_pktIn   <= {2'b00, 4'hf, 128'h0000_0000_0000_c0a8_01c8_0000_0000_0000};
             3'd4: begin
                   r_pktIn   <= {2'b10, 4'hb, 128'b0};
                   pkt_cnt   <= 'b0;
                   testbench_state   <= tail;
+                  // testbench_state   <= gen_2_pkt;
             end
           endcase
         end
+        // gen_2_pkt: begin
+        //   pkt_cnt           <= (pkt_cnt == 8'd4)? 8'd5: (pkt_cnt + 8'd1);
+        //   r_pktIn_valid     <= 1'b1;
+        //   case(pkt_cnt[2:0])
+        //     //* metadata;
+        //     3'd0: r_pktIn   <= {2'b11, 4'hf, 96'b0, 4'h2, 12'd74, 16'b0};
+        //     3'd1: r_pktIn   <= {2'b01, 4'hf, 128'h000a3500010204421aa8239f08004500};
+        //     3'd2: r_pktIn   <= {2'b00, 4'hf, 128'h003c9519400040062176c0a80114c0a8};
+        //     3'd3: r_pktIn   <= {2'b00, 4'hf, 128'h01c89f561389775fc82200000000a002};
+        //     3'd4: r_pktIn   <= {2'b00, 4'hf, 128'hfaf0845b0000020405b40402080a3e0b};
+        //     3'd5: begin
+        //           r_pktIn   <= {2'b10, 4'h9, 128'h05790000000001030307000000000000};
+        //           pkt_cnt   <= 'b0;
+        //           testbench_state   <= gen_3_pkt;
+        //     end
+        //   endcase
+        // end
+        // gen_3_pkt: begin
+        //   pkt_cnt           <= (pkt_cnt == 8'd4)? 8'd4: (pkt_cnt + 8'd1);
+        //   r_pktIn_valid     <= 1'b1;
+        //   case(pkt_cnt[2:0])
+        //     //* metadata;
+        //     3'd0: r_pktIn   <= {2'b11, 4'hf, 96'b0, 4'h2, 12'd54, 16'b0};
+        //     3'd1: r_pktIn   <= {2'b01, 4'hf, 128'h000a3500010204421aa8239f08004500};
+        //     3'd2: r_pktIn   <= {2'b00, 4'hf, 128'h0028951a400040062189c0a80114c0a8};
+        //     3'd3: r_pktIn   <= {2'b00, 4'hf, 128'h01c89f561389775fc8230000196f5010};
+        //     3'd4: begin
+        //           r_pktIn   <= {2'b10, 4'h5, 128'hfaf08447000000000000000000000000};
+        //           pkt_cnt   <= 'b0;
+        //           testbench_state   <= tail;
+        //     end
+        //   endcase
+        // end
         send_arp: begin
           pkt_cnt           <= pkt_cnt + 8'd1;
           r_pktIn_valid     <= 1'b1;

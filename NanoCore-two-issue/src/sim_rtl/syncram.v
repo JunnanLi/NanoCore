@@ -1,5 +1,11 @@
 
-module syncram (
+module syncram 
+#(
+  parameter BUFFER = 1,
+  parameter width = 32,
+  parameter depth = 10,
+  parameter words = 1024
+) (
   address_a,
   address_b,
   clock,
@@ -12,9 +18,9 @@ module syncram (
   q_a,
   q_b
 );
-  parameter   width = 32,
-              depth = 10,
-              words = 1024;
+  // parameter   width = 32,
+  //             depth = 10,
+  //             words = 1024;
 
   input       [depth-1:0]   address_a;
   input       [depth-1:0]   address_b;
@@ -30,8 +36,12 @@ module syncram (
 
   reg [width-1:0]       memory[words-1:0];
   reg [depth-1:0]       r_addr_a, r_addr_b;
+  wire[depth-1:0]       w_addr_a, w_addr_b;
   wire[words-1:0]       we_a_dec, we_b_dec;
   
+  assign w_addr_a = BUFFER? r_addr_a: address_a;
+  assign w_addr_b = BUFFER? r_addr_b: address_b;
+
   always @(clock) begin
     if(clock) begin
       r_addr_a          <= (rden_a | wren_a)? address_a: r_addr_a;
@@ -39,8 +49,8 @@ module syncram (
       memory[address_a] <= wren_a? data_a: memory[address_a];
 
       //* read;
-      q_a               <= memory[r_addr_a];
-      q_b               <= memory[r_addr_b];
+      q_a               <= memory[w_addr_a];
+      q_b               <= memory[w_addr_b];
     end
     else begin
       memory[address_b] <= wren_b? data_b: memory[address_b];

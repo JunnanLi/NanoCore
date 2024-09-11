@@ -16,7 +16,9 @@ module N2_lsu (
   input   wire  [31:0]  alu_op1_i,
   input   wire  [31:0]  alu_op2_i,
   output  wire  [31:0]  alu_rst_o,
-  output  wire  [regindex_bits-1:0] rf_dst_lsu_ns_o,
+  output  reg           rf_we_lsu_ns_o,
+  output  wire          rf_we_lsu_o,
+  output  reg   [regindex_bits-1:0] rf_dst_lsu_ns_o,
   output  wire  [regindex_bits-1:0] rf_dst_lsu_o,
   input   uop_ctl_t     uop_ctl_i,
   input   wire          data_gnt_i,
@@ -27,7 +29,6 @@ module N2_lsu (
   output  wire  [ 3:0]  data_wstrb_o,
   input   wire          data_ready_i,
   input   wire  [31:0]  data_rdata_i,
-  output  wire          rf_we_lsu_o,
   output  wire          lsu_stall_idu_o
 );
 
@@ -70,7 +71,7 @@ module N2_lsu (
   assign data_wdata_o = lsu_ctl_fetch.wdata;
   assign data_wstrb_o = lsu_ctl_fetch.wstrb & {4{lsu_ctl_fetch.we}};
   assign data_we_o    = lsu_ctl_fetch.we;
-  assign rf_dst_lsu_ns_o  = lsu_ctl_fetch.rf_dst;
+  // assign rf_dst_lsu_ns_o  = lsu_ctl_fetch.rf_dst;
   assign rf_we_lsu_o  = data_ready_i & ~lsu_ctl_rd.we;
   assign rf_dst_lsu_o = lsu_ctl_rd.rf_dst;
   assign alu_rst_o    = {32{lsu_ctl_rd.is_lu}} & w_data_rdata |
@@ -83,8 +84,11 @@ module N2_lsu (
       lsq_rd_ptr        <= '0;
       lsq_wr_ptr        <= '0;
       lsq_fetch_ptr     <= '0;
+      rf_we_lsu_ns_o    <= '0;
     end
     else begin
+      rf_we_lsu_ns_o    <= ~data_we_o & data_req_o;
+      rf_dst_lsu_ns_o   <= lsu_ctl_fetch.rf_dst;
       //* write lsq;
       if(to_st_v_i | to_ld_v_i) begin
         lsq_entry[lsq_wr_ptr] <= lsu_ctl_idu;
@@ -103,7 +107,7 @@ module N2_lsu (
       // end
 
 
-      lsq_rd_ptr      <= data_ready_i? (lsq_rd_ptr + 1): lsq_rd_ptr;
+      lsq_rd_ptr      <=  data_ready_i? (lsq_rd_ptr + 1): lsq_rd_ptr;
       // //* respond
       // rf_we_lsu_o       <= 1'b0;
       // if (data_ready_i) begin

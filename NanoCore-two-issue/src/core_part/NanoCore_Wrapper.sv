@@ -8,7 +8,8 @@
 module NanoCore_Wrapper#(
   parameter [31:0] COREID = 2'b0
 ) (
-  input i_clk, i_rst_n,
+  input i_clk, i_rst_n, i_rst_soc_n,
+  output wire           flush_o,
 
   input  wire           data_gnt_i,
   output wire           data_req_o,
@@ -51,6 +52,8 @@ module NanoCore_Wrapper#(
   reg  [31:0] r_instr_addr_delay, r_data_addr_delay;
   wire [31:0] data_rdata;
   wire        w_mem_req, w_peri_req;
+  reg         peri_ready_delay;
+  reg  [31:0] peri_rdata_delay;
   //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>//
 
   assign w_mem_req    = data_addr_o[31:28] == 4'b0 && data_req;
@@ -72,8 +75,20 @@ module NanoCore_Wrapper#(
   assign o_peri_wdata = data_wdata_o;
   assign o_peri_wstrb = data_wstrb_o;
 
-  assign data_ready    = data_valid_i | i_peri_ready;
-  assign data_rdata    = data_valid_i? data_rdata_i: i_peri_rdata;
+  // assign data_ready    = data_valid_i | i_peri_ready;
+  // assign data_rdata    = data_valid_i? data_rdata_i: i_peri_rdata;
+  assign data_ready    = data_valid_i | peri_ready_delay;
+  assign data_rdata    = data_valid_i? data_rdata_i: peri_rdata_delay;
+
+  always_ff @(posedge i_clk or negedge i_rst_n) begin
+    if(!i_rst_n) begin
+      peri_ready_delay    <= '0;
+    end
+    else begin
+      peri_ready_delay    <= i_peri_ready;
+      peri_rdata_delay    <= i_peri_rdata;
+    end
+  end
 
   NanoCore
   #(
@@ -82,6 +97,8 @@ module NanoCore_Wrapper#(
   ) NanoCore(
     .clk              (i_clk          ),
     .resetn           (i_rst_n        ),
+    .resetn_soc       (i_rst_soc_n    ),
+    .flush_o          (flush_o        ),
     .trap             (               ),
 
     .data_gnt_i       (data_gnt_i     ),

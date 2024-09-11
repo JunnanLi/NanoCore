@@ -213,7 +213,7 @@ low_level_input(struct netif *netif, u16_t len)
     *((volatile uint32_t *) DMA_RECV_ADDR_ADDR)   = (uint32_t )(meta_buffer);
     //* recv pkt;
     for (q = p; q != NULL; q = q->next) {
-      // printf("r: %08x, %d\n\r", (uint32_t )(q->payload), (uint32_t )(q->len));
+      printf("r: %08x, %d\n\r", (uint32_t )(q->payload), (uint32_t )(q->len));
       *((volatile uint32_t *) DMA_RECV_LEN_ADDR)  = (uint32_t )(q->len);
       *((volatile uint32_t *) DMA_RECV_ADDR_ADDR) = (uint32_t )(q->payload);
       // printf("dma_wr\n\r");

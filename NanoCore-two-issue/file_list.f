@@ -12,9 +12,12 @@
 ./src/core_part/NanoCore_Wrapper.sv
 ./src/mem_part/Memory_Top_2Port.sv
 ./src/mem_part/SRAM_Wrapper.sv
+./src/mem_part/SRAM_Wrapper_instr.sv
 ./src/mem_part/Cache/NanoCache_Top_2Port.sv
-./src/mem_part/Cache/NanoCache_Search.sv
-./src/mem_part/Cache/NanoCache_Update.sv
+# ./src/mem_part/Cache/NanoCache_Search.sv
+# ./src/mem_part/Cache/NanoCache_Update.sv
+./src/mem_part/Cache/NanoCache_Search_1PE.sv
+./src/mem_part/Cache/NanoCache_Update_1PE.sv
 
 ./src/peripherals_part/Peri_Top.sv
 ./src/peripherals_part/bus_part/Interrupt_Ctrl.sv

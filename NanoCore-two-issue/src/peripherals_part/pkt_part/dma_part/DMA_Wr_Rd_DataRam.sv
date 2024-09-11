@@ -358,6 +358,26 @@ module DMA_Wr_Rd_DataRAM(
           //   4'd14:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*6],reserve_data_rdDMA_l[127:16*6]};
           //   4'd15:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*7],reserve_data_rdDMA_l[127:16*7]};
           // endcase
+        `ifdef DATA_SRAM_noBUFFER
+          case({r_start_addr,r_start_byte[1]})
+            4'd8: o_din_rdDMA[127:0]      <= reserve_data_rdDMA_h;
+            4'd9: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*7],reserve_data_rdDMA_l[127:16*7]};
+            4'd10:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*6],reserve_data_rdDMA_l[127:16*6]};
+            4'd11:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*5],reserve_data_rdDMA_l[127:16*5]};
+            4'd12:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*4],reserve_data_rdDMA_l[127:16*4]};
+            4'd13:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*3],reserve_data_rdDMA_l[127:16*3]};
+            4'd14:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*2],reserve_data_rdDMA_l[127:16*2]};
+            4'd15:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*1],reserve_data_rdDMA_l[127:16*1]};
+            4'd0: o_din_rdDMA[127:0]      <= reserve_data_rdDMA_l;
+            4'd1: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*7],reserve_data_rdDMA_h[127:16*7]};
+            4'd2: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*6],reserve_data_rdDMA_h[127:16*6]};
+            4'd3: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*5],reserve_data_rdDMA_h[127:16*5]};
+            4'd4: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*4],reserve_data_rdDMA_h[127:16*4]};
+            4'd5: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*3],reserve_data_rdDMA_h[127:16*3]};
+            4'd6: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*2],reserve_data_rdDMA_h[127:16*2]};
+            4'd7: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*1],reserve_data_rdDMA_h[127:16*1]};
+          endcase
+        `else  
           case({r_start_addr,r_start_byte[1]})
             4'd0: o_din_rdDMA[127:0]      <= reserve_data_rdDMA_h;
             4'd1: o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_h[0+:16*7],reserve_data_rdDMA_l[127:16*7]};
@@ -376,6 +396,7 @@ module DMA_Wr_Rd_DataRAM(
             4'd14:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*2],reserve_data_rdDMA_h[127:16*2]};
             4'd15:o_din_rdDMA[127:0]      <= {reserve_data_rdDMA_l[0+:16*1],reserve_data_rdDMA_h[127:16*1]};
           endcase
+        `endif
           o_din_rdDMA[133:128]            <= {2'b00,4'hf};
           
           //* get {r_length_pBuf, o_dma_addr};
