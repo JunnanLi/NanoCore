@@ -10,6 +10,7 @@
 import NanoCore_pkg::*;
 
 module NanoCore #(
+  parameter [ 0:0] CATCH_MISALIGN = 1,
   parameter [ 0:0] CATCH_ILLINSN = 1,
   parameter [31:0] PROGADDR_RESET = 32'b0,
   parameter [31:0] PROGADDR_IRQ = 32'b0
@@ -202,6 +203,7 @@ module NanoCore #(
 
   N2_ifu  
   #(
+    .CATCH_MISALIGN(CATCH_MISALIGN),
     .PROGADDR_RESET(PROGADDR_RESET)
   ) u_ifu(
     .clk              (clk),
@@ -230,6 +232,7 @@ module NanoCore #(
   );
 
   N2_idu #(
+    .CATCH_MISALIGN   (CATCH_MISALIGN   ),
     .CATCH_ILLINSN    (CATCH_ILLINSN    ),
     .PROGADDR_RESET   (PROGADDR_RESET   )
   ) u_idu(

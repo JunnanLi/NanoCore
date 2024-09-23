@@ -7,6 +7,7 @@
 import NanoCore_pkg::*;
 
 module N2_ifu #(
+  parameter [ 0:0] CATCH_MISALIGN = 1,
   parameter [31:0] PROGADDR_RESET = 32'b0,
   parameter [31:0] PROGADDR_IRQ   = 32'b0,
   parameter        NUM_nBTB       = 4
@@ -214,7 +215,8 @@ module N2_ifu #(
     end
     N2_ifu_btb N2_ifu_btb(
       .clk            (clk            ),
-      .resetn         (resetn_soc     ),
+      .resetn_soc     (resetn_soc     ),
+      .resetn         (resetn         ),
       .lookup_pc_i    (lookup_pc      ),
       .btb_rst_m0_o   (btb_rst_m0     ),
       .btb_rst_m1_o   (btb_rst_m1     ),
@@ -232,7 +234,7 @@ endmodule
 module N2_ifu_btb #(
   parameter             NUM_mBTB = 512
 ) (
-  input                 clk, resetn,
+  input                 clk, resetn_soc, resetn,
 
   input                 flush_i,
   input   wire  [15:0]  lookup_pc_i,
@@ -273,13 +275,14 @@ wire   [15:0] lookup_pc_m1 = {lookup_pc_i[15:3],3'b100};
   reg           wren_bank0, wren_bank1;
   reg   [33:0]  wdata_bank0, wdata_bank1;
   reg   [ 8:0]  addr_bank0, addr_bank1;
+  reg           resetn_delay;
   reg           state_btb;
   localparam    IDLE_S  = 0,
                 READY_S = 1;
 
 
-  always_ff @(posedge clk or negedge resetn) begin
-    if(!resetn) begin
+  always_ff @(posedge clk or negedge resetn_soc) begin
+    if(!resetn_soc) begin
       wren_bank0          <= 1'b0;
       wren_bank1          <= 1'b0;
       addr_bank1          <= '0;
@@ -305,6 +308,7 @@ wire   [15:0] lookup_pc_m1 = {lookup_pc_i[15:3],3'b100};
                              btb_upd_ex_i.pc[3+:9]: btb_upd_d2_i.pc[3+:9];
       addr_bank1          <= btb_upd_v_ex_i & btb_upd_ex_i.pc[2]? 
                              btb_upd_ex_i.pc[3+:9]: btb_upd_d2_i.pc[3+:9];
+      resetn_delay        <= resetn;
       case(state_btb)
         IDLE_S: begin
           addr_bank0      <= addr_bank1 + 1;
@@ -318,6 +322,13 @@ wire   [15:0] lookup_pc_m1 = {lookup_pc_i[15:3],3'b100};
           end
         end
         READY_S: begin
+          if(~resetn & resetn_delay) begin
+            state_btb     <= IDLE_S;
+            wren_bank0    <= 1'b0;
+            wren_bank1    <= 1'b0;
+            addr_bank1    <= '0;
+            addr_bank0    <= '0;
+          end
         end
         default: begin end
       endcase

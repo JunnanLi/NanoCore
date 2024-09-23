@@ -25,6 +25,8 @@
     `define ENABLE_DMA              //* Address 1007xxxx is always for DMA;
     // `define ENABLE_DRA              //* Address 1008xxxx is always for DRA;
   //=========================//
+  `define ENABLE_CKSUM
+  //=========================//
   //* instr/data memory size;
   // `define MEM_64KB
   // `define MEM_128KB

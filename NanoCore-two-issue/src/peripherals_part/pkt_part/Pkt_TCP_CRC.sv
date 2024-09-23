@@ -15,10 +15,10 @@ module Pkt_TCP_CRC(
    input  wire              i_clk
   ,input  wire              i_rst_n
   //* calculate crc;
-  ,input  wire              i_data_valid
-  ,input  wire  [133:0]     i_data
-  ,output reg               o_data_valid
-  ,output reg   [133:0]     o_data
+  ,(* mark_debug = "true"*)input  wire              i_data_valid
+  ,(* mark_debug = "true"*)input  wire  [133:0]     i_data
+  ,(* mark_debug = "true"*)output reg               o_data_valid
+  ,(* mark_debug = "true"*)output reg   [133:0]     o_data
 );
 
   
@@ -33,9 +33,9 @@ module Pkt_TCP_CRC(
   wire                      empty_pkt;
   
   //* fifo crc;
-  reg   [16:0]              din_crc;
-  reg                       rden_crc, wren_crc;
-  wire  [16:0]              dout_crc;
+  (* mark_debug = "true"*)reg   [16:0]              din_crc;
+  (* mark_debug = "true"*)reg                       rden_crc, wren_crc;
+  (* mark_debug = "true"*)wire  [16:0]              dout_crc;
   wire                      empty_crc;
 
   //* temp;
@@ -46,7 +46,8 @@ module Pkt_TCP_CRC(
   
   //* state;
   typedef enum logic [3:0] {idle, read_data_0, read_data_1, read_data_2, 
-                            read_data_3, wait_pkt_tail, calc_crc_0, calc_crc_1, wait_crc} state_t;
+                            read_data_3, wait_pkt_tail, calc_crc_0, 
+                            calc_crc_1, calc_crc_2, wait_crc} state_t;
   state_t state_calc, state_out;
 
   //* change 4b tag_valid to 16b bm_invalid;
@@ -117,13 +118,23 @@ module Pkt_TCP_CRC(
         end
         calc_crc_1: begin
           r_crcRst[0]             <= r_crcRst[0]+ r_crcRst[1]+ r_crcRst[2];
+          state_calc              <= calc_crc_2;
+        end
+        calc_crc_2: begin
+          r_crcRst[0]             <= r_crcRst[0][15:0]+ r_crcRst[0][31:16];
           state_calc              <= wait_crc;
         end
         wait_crc: begin
-          din_crc[15:0]           <= ~(r_crcRst[0][15:0]+ r_crcRst[0][31:16]);
-          din_crc[16]             <= tag_to_calc_crc;
-          wren_crc                <= 1'b1;
-          state_calc              <= idle;
+          if(r_crcRst[0][31:16] == 0) begin
+            din_crc[15:0]         <= ~r_crcRst[0][15:0];
+            din_crc[16]           <= tag_to_calc_crc;
+            wren_crc              <= 1'b1;
+            state_calc            <= idle;
+          end
+          else begin
+            r_crcRst[0]           <= r_crcRst[0][15:0]+ r_crcRst[0][31:16];
+            state_calc            <= wait_crc;
+          end
         end
         default: begin
           state_calc              <= idle;
@@ -136,6 +147,8 @@ module Pkt_TCP_CRC(
   //====================================================================//
   //*  Output Pkt (calc)
   //====================================================================//
+  reg [16:0]  temp_crc;
+  (* mark_debug = "true"*) reg mismatch_tag;
   always @(posedge i_clk or negedge i_rst_n) begin
     if(~i_rst_n) begin
       //* fifo;
@@ -144,7 +157,8 @@ module Pkt_TCP_CRC(
       //* output;
       o_data_valid                <= 1'b0;
       //* state;
-      state_out                  <= idle;
+      state_out                   <= idle;
+      mismatch_tag                <= 1'b0;
     end else begin
       case(state_out)
         idle: begin
@@ -152,6 +166,7 @@ module Pkt_TCP_CRC(
           o_data_valid            <= 1'b0;
           if(empty_crc == 1'b0) begin
             rden_pkt              <= 1'b1;
+            rden_crc              <= 1'b1;
             state_out             <= read_data_0;
           end
           else begin
@@ -159,6 +174,8 @@ module Pkt_TCP_CRC(
           end
         end
         read_data_0: begin
+          rden_crc                <= 1'b0;
+          temp_crc                <= rden_crc? dout_crc: temp_crc;
           o_data_valid            <= 1'b1;
           o_data                  <= dout_pkt;
           state_out               <= (dout_pkt[133:132] == 2'b01)? read_data_1: read_data_0;
@@ -169,16 +186,17 @@ module Pkt_TCP_CRC(
           state_out               <= read_data_2;
         end
         read_data_2: begin
-          rden_crc                <= 1'b1;
           o_data_valid            <= 1'b1;
           o_data                  <= dout_pkt;
           state_out               <= read_data_3;
+          rden_pkt                <= (dout_pkt[133:132] == 2'b10)? 1'b0: 1'b1;
+          state_out               <= (dout_pkt[133:132] == 2'b10)? idle: read_data_3;
         end
         read_data_3: begin
-          rden_crc                <= 1'b0;
           o_data_valid            <= 1'b1;
           o_data                  <= dout_pkt;
-          o_data[111:96]          <= dout_crc[16]? dout_crc[15:0]: dout_pkt[111:96];
+          o_data[111:96]          <= temp_crc[16]? temp_crc[15:0]: dout_pkt[111:96];
+          mismatch_tag            <= temp_crc[16] & (temp_crc[15:0] != dout_pkt[111:96]);
           rden_pkt                <= (dout_pkt[133:132] == 2'b10)? 1'b0: 1'b1;
           state_out               <= (dout_pkt[133:132] == 2'b10)? idle: wait_pkt_tail;
         end

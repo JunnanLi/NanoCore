@@ -7,6 +7,7 @@
 import NanoCore_pkg::*;
 
 module N2_idu #(
+  parameter [ 0:0] CATCH_MISALIGN = 1,
   parameter [ 0:0] CATCH_ILLINSN = 1,
   parameter [31:0] PROGADDR_RESET = 32'b0,
   parameter [31:0] PROGADDR_IRQ = 32'b0
@@ -310,7 +311,7 @@ end
         uop_ctl_m0_d1_o.instr_retirq: begin
           is_branch_d2_o    <= 'b1;
           `debug($display("LD_RS1: %2d 0x%08x", uop_ctl_m0_d1_o.decoded_rs1, cpuregs_rs1_m0);)
-          branch_pc_d2_o    <= irq_retPC;
+          branch_pc_d2_o    <= CATCH_MISALIGN ? (irq_retPC & 32'h fffffffe) : irq_retPC;
           irq_processing    <= 1'b0;
         end
         uop_ctl_m0_d1_o.instr_maskirq: begin
@@ -365,7 +366,7 @@ end
           uop_ctl_m1_d1_o.instr_retirq: begin
             is_branch_d2_o    <= 'b1;
             `debug($display("LD_RS1: %2d 0x%08x", uop_ctl_m1_d1_o.decoded_rs1, cpuregs_rs1_m1);)
-            branch_pc_d2_o    <= irq_retPC;
+            branch_pc_d2_o    <= CATCH_MISALIGN ? (irq_retPC & 32'h fffffffe) : irq_retPC;
             irq_processing    <= 1'b0;
           end
           uop_ctl_m1_d1_o.instr_maskirq: begin
